@@ -1,11 +1,14 @@
 
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, isAuthenticated, logout } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,6 +24,11 @@ const Header = () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <header
@@ -50,21 +58,43 @@ const Header = () => {
           >
             Courses and Pricing
           </Link>
+          {isAuthenticated && (
+            <Link
+              to="/dashboard"
+              className="text-base font-medium text-white/90 hover:text-white transition-apple"
+            >
+              Dashboard
+            </Link>
+          )}
         </nav>
 
         <div className="hidden md:flex items-center space-x-6">
-          <Link
-            to="/signin" 
-            className="text-base font-medium text-white/90 hover:text-white transition-apple"
-          >
-            Sign In
-          </Link>
-          <Link
-            to="/about"
-            className="text-base font-medium text-white/90 hover:text-white transition-apple"
-          >
-            About
-          </Link>
+          {isAuthenticated ? (
+            <div className="flex items-center space-x-4">
+              <span className="text-white/90">Hello, {user.name.split(' ')[0]}</span>
+              <button
+                onClick={handleLogout}
+                className="text-base font-medium text-white/90 hover:text-white transition-apple"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <>
+              <Link
+                to="/signin" 
+                className="text-base font-medium text-white/90 hover:text-white transition-apple"
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/about"
+                className="text-base font-medium text-white/90 hover:text-white transition-apple"
+              >
+                About
+              </Link>
+            </>
+          )}
         </div>
 
         <button
@@ -114,20 +144,43 @@ const Header = () => {
           >
             Courses and Pricing
           </Link>
-          <Link
-            to="/signin"
-            className="block py-2 text-lg font-medium text-white"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Sign In
-          </Link>
-          <Link
-            to="/about"
-            className="block py-2 text-lg font-medium text-white"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            About
-          </Link>
+          {isAuthenticated && (
+            <Link
+              to="/dashboard"
+              className="block py-2 text-lg font-medium text-white"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Dashboard
+            </Link>
+          )}
+          {isAuthenticated ? (
+            <button
+              onClick={() => {
+                handleLogout();
+                setMobileMenuOpen(false);
+              }}
+              className="block py-2 text-lg font-medium text-white w-full text-left"
+            >
+              Sign Out
+            </button>
+          ) : (
+            <>
+              <Link
+                to="/signin"
+                className="block py-2 text-lg font-medium text-white"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Sign In
+              </Link>
+              <Link
+                to="/about"
+                className="block py-2 text-lg font-medium text-white"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                About
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>
