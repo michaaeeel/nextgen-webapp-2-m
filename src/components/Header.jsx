@@ -38,18 +38,18 @@ const Header = () => {
         </Link>
 
         <nav className="hidden md:flex items-center space-x-8">
-          <a
-            href="#"
+          <Link
+            to="/"
             className="text-base font-medium text-white/90 hover:text-white transition-apple"
           >
             Get Started
-          </a>
-          <a
-            href="#courses"
+          </Link>
+          <Link
+            to="/courses"
             className="text-base font-medium text-white/90 hover:text-white transition-apple"
           >
             Courses and Pricing
-          </a>
+          </Link>
         </nav>
 
         <div className="hidden md:flex items-center space-x-6">
@@ -100,20 +100,20 @@ const Header = () => {
         )}
       >
         <div className="container mx-auto px-6 py-6 space-y-4">
-          <a
-            href="#"
+          <Link
+            to="/"
             className="block py-2 text-lg font-medium text-white"
             onClick={() => setMobileMenuOpen(false)}
           >
             Get Started
-          </a>
-          <a
-            href="#courses"
+          </Link>
+          <Link
+            to="/courses"
             className="block py-2 text-lg font-medium text-white"
             onClick={() => setMobileMenuOpen(false)}
           >
             Courses and Pricing
-          </a>
+          </Link>
           <Link
             to="/signin"
             className="block py-2 text-lg font-medium text-white"
