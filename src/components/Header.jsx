@@ -30,12 +30,12 @@ const Header = () => {
       )}
     >
       <div className="container mx-auto px-6 flex items-center justify-between h-16">
-        <a 
-          href="#" 
+        <Link 
+          to="/" 
           className="text-xl font-semibold text-white transition-apple hover:opacity-90"
         >
           NextGEN Investments
-        </a>
+        </Link>
 
         <nav className="hidden md:flex items-center space-x-8">
           <a
