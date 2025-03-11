@@ -2,10 +2,10 @@
 import { useEffect, useRef } from "react";
 
 const Hero = () => {
-  const heroRef = useRef(null);
+  const heroRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMouseMove = (e: MouseEvent) => {
       if (!heroRef.current) return;
       
       const { clientX, clientY } = e;
@@ -21,7 +21,7 @@ const Hero = () => {
       
       chartElements.forEach((line, index) => {
         const factor = (index + 1) * 0.1;
-        line.style.transform = `translate(${moveX * factor}px, ${moveY * factor}px)`;
+        (line as HTMLElement).style.transform = `translate(${moveX * factor}px, ${moveY * factor}px)`;
       });
     };
     
