@@ -2,11 +2,7 @@
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 
-interface FooterProps {
-  className?: string;
-}
-
-const Footer = ({ className }: FooterProps) => {
+const Footer = ({ className }) => {
   const currentYear = new Date().getFullYear();
   
   return (
