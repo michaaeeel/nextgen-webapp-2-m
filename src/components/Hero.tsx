@@ -14,14 +14,14 @@ const Hero = () => {
       const x = (clientX - left) / width;
       const y = (clientY - top) / height;
       
-      const moveX = (x - 0.5) * 20;
-      const moveY = (y - 0.5) * 20;
+      const moveX = (x - 0.5) * 15;
+      const moveY = (y - 0.5) * 15;
       
-      const circleElements = heroRef.current.querySelectorAll('.hero-circle');
+      const chartElements = heroRef.current.querySelectorAll('.chart-line');
       
-      circleElements.forEach((circle, index) => {
+      chartElements.forEach((line, index) => {
         const factor = (index + 1) * 0.1;
-        (circle as HTMLElement).style.transform = `translate(${moveX * factor}px, ${moveY * factor}px)`;
+        (line as HTMLElement).style.transform = `translate(${moveX * factor}px, ${moveY * factor}px)`;
       });
     };
     
@@ -33,55 +33,146 @@ const Hero = () => {
   }, []);
   
   return (
-    <section ref={heroRef} className="relative pt-36 pb-24 overflow-hidden">
-      {/* Background circles */}
+    <section ref={heroRef} className="relative h-screen flex items-center">
+      {/* Financial data grid background */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="hero-circle absolute top-1/4 right-1/2 w-[500px] h-[500px] rounded-full bg-gradient-to-br from-secondary/50 to-secondary/0 blur-3xl transition-transform duration-700 ease-apple"></div>
-        <div className="hero-circle absolute top-1/3 left-1/4 w-[400px] h-[400px] rounded-full bg-gradient-to-br from-secondary/70 to-secondary/0 blur-3xl transition-transform duration-700 ease-apple"></div>
-        <div className="hero-circle absolute bottom-0 right-1/4 w-[600px] h-[600px] rounded-full bg-gradient-to-br from-secondary/60 to-secondary/0 blur-3xl transition-transform duration-700 ease-apple"></div>
+        <div className="absolute inset-0 bg-grid-pattern opacity-20"></div>
+        
+        {/* Candlestick chart elements */}
+        <div className="chart-line absolute left-0 top-1/4 w-full h-px bg-cyan-500/20"></div>
+        <div className="chart-line absolute left-0 top-1/3 w-full h-px bg-cyan-500/10"></div>
+        <div className="chart-line absolute left-0 top-1/2 w-full h-px bg-cyan-500/20"></div>
+        <div className="chart-line absolute left-0 top-2/3 w-full h-px bg-cyan-500/10"></div>
+        <div className="chart-line absolute left-0 top-3/4 w-full h-px bg-cyan-500/20"></div>
+        
+        {/* Accent elements */}
+        <div className="absolute top-1/3 left-1/5 w-2 h-2 rounded-full bg-red-500/50 blur-sm"></div>
+        <div className="absolute top-2/3 left-1/4 w-3 h-3 rounded-full bg-cyan-500/50 blur-sm"></div>
+        <div className="absolute top-1/2 left-1/2 w-4 h-4 rounded-full bg-red-500/30 blur-md"></div>
       </div>
       
-      <div className="container mx-auto px-6 relative z-10">
-        <div className="max-w-5xl mx-auto text-center">
-          <div className="inline-block mb-6 animate-fade-in">
-            <span className="py-1 px-4 bg-secondary text-sm font-medium rounded-full">
-              Introducing nextGEN
-            </span>
-          </div>
-          
-          <h1 className="text-4xl md:text-6xl lg:text-7xl font-medium tracking-tight mb-8 animate-slide-up text-balance">
-            The future of design <br />
-            <span className="text-gradient">reimagined</span>
-          </h1>
-          
-          <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto animate-slide-up stagger-1 text-pretty">
-            Discover a new standard in minimalist design — where simplicity meets functionality in perfect balance.
-          </p>
-          
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 md:gap-6 animate-slide-up stagger-2">
-            <button className="w-full sm:w-auto h-14 px-8 bg-primary text-primary-foreground rounded-full font-medium shadow-sm transition-apple hover:shadow-md hover:scale-[1.02] active:scale-[0.98]">
-              Get Started
-            </button>
-            <button className="w-full sm:w-auto h-14 px-8 bg-secondary text-secondary-foreground rounded-full font-medium shadow-sm transition-apple hover:shadow-md hover:scale-[1.02] active:scale-[0.98]">
-              Learn More
-            </button>
+      <div className="container mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-10 relative z-10">
+        {/* Left side with chart visualization */}
+        <div className="hidden lg:flex flex-col items-center justify-center">
+          <div className="relative w-full">
+            {/* Stock price numbers */}
+            <div className="absolute top-1/4 right-1/4 text-red-500 font-mono text-2xl font-bold opacity-80">
+              326.91
+              <span className="text-red-500 text-xl ml-2">▼</span>
+            </div>
+            <div className="absolute bottom-1/3 left-1/4 text-red-500 font-mono text-2xl font-bold opacity-80">
+              597.55
+              <span className="text-red-500 text-xl ml-2">▼</span>
+            </div>
+            
+            {/* Candlestick chart */}
+            <svg className="w-full h-[500px]" viewBox="0 0 500 400" xmlns="http://www.w3.org/2000/svg">
+              {/* Grid lines */}
+              {Array.from({ length: 10 }).map((_, i) => (
+                <line 
+                  key={`v-${i}`} 
+                  x1={i * 50} 
+                  y1="0" 
+                  x2={i * 50} 
+                  y2="400" 
+                  stroke="#1e3a5f" 
+                  strokeWidth="1"
+                />
+              ))}
+              {Array.from({ length: 8 }).map((_, i) => (
+                <line 
+                  key={`h-${i}`} 
+                  x1="0" 
+                  y1={i * 50} 
+                  x2="500" 
+                  y2={i * 50} 
+                  stroke="#1e3a5f" 
+                  strokeWidth="1"
+                />
+              ))}
+              
+              {/* Candlestick patterns */}
+              <g className="candlesticks">
+                {/* Red candle */}
+                <line x1="50" y1="100" x2="50" y2="200" stroke="#ff4560" strokeWidth="2" />
+                <rect x="45" y="120" width="10" height="60" fill="#ff4560" />
+                
+                {/* Green candle */}
+                <line x1="80" y1="180" x2="80" y2="280" stroke="#00e396" strokeWidth="2" />
+                <rect x="75" y="180" width="10" height="60" fill="#00e396" />
+                
+                {/* Red candle */}
+                <line x1="110" y1="150" x2="110" y2="250" stroke="#ff4560" strokeWidth="2" />
+                <rect x="105" y="150" width="10" height="60" fill="#ff4560" />
+                
+                {/* White candle (main prominent one) */}
+                <line x1="140" y1="100" x2="140" y2="300" stroke="white" strokeWidth="3" />
+                <rect x="135" y="120" width="10" height="150" fill="white" opacity="0.8" />
+                
+                {/* Red candle */}
+                <line x1="170" y1="160" x2="170" y2="220" stroke="#ff4560" strokeWidth="2" />
+                <rect x="165" y="160" width="10" height="40" fill="#ff4560" />
+                
+                {/* Green candle */}
+                <line x1="200" y1="140" x2="200" y2="220" stroke="#00e396" strokeWidth="2" />
+                <rect x="195" y="180" width="10" height="40" fill="#00e396" />
+                
+                {/* Red candle */}
+                <line x1="230" y1="120" x2="230" y2="210" stroke="#ff4560" strokeWidth="2" />
+                <rect x="225" y="120" width="10" height="60" fill="#ff4560" />
+                
+                {/* White candle (main prominent one) */}
+                <line x1="260" y1="80" x2="260" y2="240" stroke="white" strokeWidth="3" />
+                <rect x="255" y="100" width="10" height="120" fill="white" opacity="0.8" />
+                
+                {/* More candlesticks continuing the pattern */}
+                <line x1="290" y1="120" x2="290" y2="180" stroke="#ff4560" strokeWidth="2" />
+                <rect x="285" y="120" width="10" height="40" fill="#ff4560" />
+                
+                <line x1="320" y1="100" x2="320" y2="200" stroke="#00e396" strokeWidth="2" />
+                <rect x="315" y="140" width="10" height="60" fill="#00e396" />
+              </g>
+              
+              {/* Data points overlay */}
+              <g className="data-points">
+                {Array.from({ length: 20 }).map((_, i) => (
+                  <circle 
+                    key={i} 
+                    cx={25 + i * 24} 
+                    cy={140 + Math.sin(i * 0.8) * 50} 
+                    r="1" 
+                    fill="#0ff" 
+                    opacity="0.4"
+                  />
+                ))}
+              </g>
+              
+              {/* Line chart overlay */}
+              <polyline 
+                points="25,180 49,160 73,170 97,155 121,180 145,165 169,190 193,170 217,160 241,150 265,165 289,145 313,160 337,140 361,155" 
+                fill="none" 
+                stroke="#0ff" 
+                strokeWidth="1.5" 
+                opacity="0.4"
+              />
+            </svg>
           </div>
         </div>
         
-        {/* Hero image */}
-        <div className="mt-20 relative max-w-5xl mx-auto animate-slide-up stagger-3">
-          <div className="relative aspect-[16/9] rounded-2xl overflow-hidden shadow-elegant">
-            <div className="absolute inset-0 bg-gradient-to-b from-black/5 to-black/0 z-10"></div>
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-100 animate-pulse-subtle">
-              <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14"></path>
-              </svg>
-            </div>
-            <svg className="w-full h-full" viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg">
-              <rect width="1600" height="900" fill="#f5f5f7" />
-              <path d="M0,450 C400,400 800,600 1600,450 L1600,900 L0,900 Z" fill="#ebeced" />
-              <circle cx="800" cy="450" r="100" fill="#e6e6e8" />
-            </svg>
+        {/* Right side with text content */}
+        <div className="flex flex-col justify-center text-center lg:text-right">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6 animate-fade-in">
+            NextGEN <span className="text-primary">Investments</span>
+          </h1>
+          
+          <p className="text-xl md:text-2xl font-medium mb-8 animate-fade-in stagger-1">
+            Build Wealth
+          </p>
+          
+          <div className="flex flex-col sm:flex-row justify-center lg:justify-end gap-4 animate-fade-in stagger-2">
+            <button className="h-12 px-8 bg-primary text-primary-foreground rounded-md font-medium shadow-sm transition-apple hover:shadow-md hover:bg-primary/90 active:scale-[0.98]">
+              Get Started
+            </button>
           </div>
         </div>
       </div>
