@@ -1,6 +1,6 @@
 
-import React, { useState } from "react";
-import { Navigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -8,18 +8,22 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { PlusCircle, Users, BookOpen, FileText, Clock } from "lucide-react";
+import { PlusCircle, Users, BookOpen, FileText, Clock, Edit } from "lucide-react";
 
 const InstructorDashboard = () => {
   const { user, isAuthenticated, logout } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+  const [courses, setCourses] = useState([]);
+  const navigate = useNavigate();
 
-  // Sample data for the dashboard
-  const courses = [
-    { id: 1, title: "Introduction to Web Development", students: 87, progress: 100, status: "active" },
-    { id: 2, title: "Advanced React Patterns", students: 54, progress: 70, status: "active" },
-    { id: 3, title: "Database Design Fundamentals", students: 32, progress: 30, status: "draft" },
-  ];
+  useEffect(() => {
+    // Load instructor's courses from localStorage
+    const allCourses = JSON.parse(localStorage.getItem('courses') || '[]');
+    if (user && user.id) {
+      const instructorCourses = allCourses.filter(course => course.instructorId === user.id);
+      setCourses(instructorCourses);
+    }
+  }, [user]);
 
   // Redirect to login if not authenticated or if not an instructor
   if (!isAuthenticated) {
@@ -29,6 +33,10 @@ const InstructorDashboard = () => {
   if (user.role !== "instructor") {
     return <Navigate to="/dashboard" />;
   }
+
+  const handleCreateCourse = () => {
+    navigate('/instructor-dashboard/courses/new');
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,7 +54,7 @@ const InstructorDashboard = () => {
                 <Button variant="outline" onClick={logout}>
                   Sign Out
                 </Button>
-                <Button className="flex items-center gap-2">
+                <Button className="flex items-center gap-2" onClick={handleCreateCourse}>
                   <PlusCircle size={16} />
                   Create New Course
                 </Button>
@@ -69,9 +77,11 @@ const InstructorDashboard = () => {
                     <CardContent>
                       <div className="flex items-center gap-2">
                         <Users className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-3xl font-bold">173</span>
+                        <span className="text-3xl font-bold">
+                          {courses.reduce((total, course) => total + (course.enrolledStudents?.length || 0), 0)}
+                        </span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">+12% from last month</p>
+                      <p className="text-xs text-muted-foreground mt-2">Across all your courses</p>
                     </CardContent>
                   </Card>
                   
@@ -82,22 +92,32 @@ const InstructorDashboard = () => {
                     <CardContent>
                       <div className="flex items-center gap-2">
                         <BookOpen className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-3xl font-bold">3</span>
+                        <span className="text-3xl font-bold">{courses.length}</span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">2 courses in draft</p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {courses.length === 0 
+                          ? 'No courses created yet' 
+                          : `${courses.length} courses available`}
+                      </p>
                     </CardContent>
                   </Card>
                   
                   <Card>
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-lg font-medium">Pending Assignments</CardTitle>
+                      <CardTitle className="text-lg font-medium">Total Content</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-center gap-2">
                         <FileText className="h-5 w-5 text-muted-foreground" />
-                        <span className="text-3xl font-bold">24</span>
+                        <span className="text-3xl font-bold">
+                          {courses.reduce((total, course) => {
+                            const modules = course.modules?.length || 0;
+                            const assignments = course.assignments?.length || 0;
+                            return total + modules + assignments;
+                          }, 0)}
+                        </span>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-2">Needs grading</p>
+                      <p className="text-xs text-muted-foreground mt-2">Modules and assignments</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -105,20 +125,29 @@ const InstructorDashboard = () => {
                 <Card>
                   <CardHeader>
                     <CardTitle>Course Performance</CardTitle>
-                    <CardDescription>Student enrollment and engagement across your courses</CardDescription>
+                    <CardDescription>Student enrollment across your courses</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-6">
-                      {courses.map((course) => (
-                        <div key={course.id} className="space-y-2">
-                          <div className="flex justify-between">
-                            <span className="font-medium">{course.title}</span>
-                            <span className="text-muted-foreground text-sm">{course.students} students</span>
+                    {courses.length === 0 ? (
+                      <div className="text-center py-6">
+                        <p className="text-muted-foreground mb-4">You haven't created any courses yet.</p>
+                        <Button onClick={handleCreateCourse}>Create Your First Course</Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {courses.map((course) => (
+                          <div key={course.id} className="space-y-2">
+                            <div className="flex justify-between">
+                              <span className="font-medium">{course.title}</span>
+                              <span className="text-muted-foreground text-sm">
+                                {course.enrolledStudents?.length || 0} students
+                              </span>
+                            </div>
+                            <Progress value={(course.enrolledStudents?.length || 0) * 10} className="h-2" />
                           </div>
-                          <Progress value={course.progress} className="h-2" />
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
                 
@@ -204,27 +233,62 @@ const InstructorDashboard = () => {
               <TabsContent value="courses" className="space-y-8">
                 <Card>
                   <CardHeader>
-                    <CardTitle>My Courses</CardTitle>
-                    <CardDescription>Manage your current courses and create new ones</CardDescription>
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <CardTitle>My Courses</CardTitle>
+                        <CardDescription>Manage your current courses and create new ones</CardDescription>
+                      </div>
+                      <Button onClick={() => navigate('/instructor-dashboard/courses')} variant="outline">
+                        View All Courses
+                      </Button>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-6">
-                      {courses.map((course) => (
-                        <div key={course.id} className="p-4 border rounded-lg flex justify-between items-center">
-                          <div>
-                            <h3 className="font-medium">{course.title}</h3>
-                            <p className="text-sm text-muted-foreground">{course.students} enrolled students</p>
+                    {courses.length === 0 ? (
+                      <div className="text-center py-6">
+                        <p className="text-muted-foreground mb-4">You haven't created any courses yet.</p>
+                        <Button onClick={handleCreateCourse}>Create Your First Course</Button>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        {courses.slice(0, 3).map((course) => (
+                          <div key={course.id} className="p-4 border rounded-lg flex justify-between items-center">
+                            <div>
+                              <h3 className="font-medium">{course.title}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {course.enrolledStudents?.length || 0} enrolled students
+                              </p>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => navigate(`/instructor-dashboard/courses/${course.id}`)}
+                              >
+                                View
+                              </Button>
+                              <Button 
+                                variant="secondary" 
+                                size="sm" 
+                                onClick={() => navigate(`/instructor-dashboard/courses/${course.id}/edit`)}
+                                className="flex items-center gap-1"
+                              >
+                                <Edit size={14} />
+                                Edit
+                              </Button>
+                            </div>
                           </div>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm">Edit</Button>
-                            <Button variant="secondary" size="sm">View</Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                   <CardFooter>
-                    <Button className="w-full">Create New Course</Button>
+                    <Button 
+                      className="w-full" 
+                      onClick={handleCreateCourse}
+                    >
+                      Create New Course
+                    </Button>
                   </CardFooter>
                 </Card>
               </TabsContent>
