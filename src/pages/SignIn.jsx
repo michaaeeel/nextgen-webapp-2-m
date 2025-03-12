@@ -135,8 +135,16 @@ const SignIn = () => {
               <div className="text-sm text-center text-muted-foreground">
                 For demo purposes, use:
                 <div className="mt-1 font-mono text-xs bg-secondary/50 p-2 rounded">
-                  Email: demo@example.com<br />
-                  Password: password
+                  <div className="mb-2">
+                    <strong>Student:</strong><br />
+                    Email: demo@example.com<br />
+                    Password: password
+                  </div>
+                  <div>
+                    <strong>Instructor:</strong><br />
+                    Email: instructor@example.com<br />
+                    Password: password
+                  </div>
                 </div>
               </div>
             </form>

@@ -13,6 +13,11 @@ const Dashboard = () => {
     return <Navigate to="/signin" />;
   }
 
+  // Redirect instructors to their dashboard
+  if (user.role === "instructor") {
+    return <Navigate to="/instructor-dashboard" />;
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Header />

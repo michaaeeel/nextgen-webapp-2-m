@@ -34,7 +34,16 @@ export function AuthProvider({ children }) {
           localStorage.setItem('user', JSON.stringify(userData));
           toast({
             title: "Welcome back!",
-            description: "You've successfully signed in.",
+            description: "You've successfully signed in as a student.",
+          });
+          resolve(userData);
+        } else if (email === 'instructor@example.com' && password === 'password') {
+          const userData = { id: '2', email, name: 'Instructor User', role: 'instructor' };
+          setUser(userData);
+          localStorage.setItem('user', JSON.stringify(userData));
+          toast({
+            title: "Welcome back!",
+            description: "You've successfully signed in as an instructor.",
           });
           resolve(userData);
         } else {
@@ -55,14 +64,14 @@ export function AuthProvider({ children }) {
           id: Math.random().toString(36).substr(2, 9),
           email: userData.email,
           name: `${userData.firstName} ${userData.lastName}`,
-          role: 'student',
+          role: userData.role || 'student',
         };
         
         setUser(newUser);
         localStorage.setItem('user', JSON.stringify(newUser));
         toast({
           title: "Account created!",
-          description: "Welcome to our learning platform!",
+          description: `Welcome to our learning platform as a ${newUser.role}!`,
         });
         resolve(newUser);
       }, 1000);
