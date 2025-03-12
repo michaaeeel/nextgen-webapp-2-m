@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -9,12 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { resetPassword } from "@/lib/supabase";
 
 const SignIn = () => {
   const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [isResettingPassword, setIsResettingPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -56,6 +57,37 @@ const SignIn = () => {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async (e) => {
+    e.preventDefault();
+    
+    if (!formData.email) {
+      toast({
+        title: "Email Required",
+        description: "Please enter your email address to reset your password.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsResettingPassword(true);
+    
+    try {
+      await resetPassword(formData.email);
+      toast({
+        title: "Password Reset Email Sent",
+        description: "Check your email for password reset instructions.",
+      });
+    } catch (error) {
+      toast({
+        title: "Password Reset Failed",
+        description: error.message || "Failed to send password reset email.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsResettingPassword(false);
     }
   };
 
@@ -119,9 +151,14 @@ const SignIn = () => {
                   </label>
                 </div>
                 
-                <a href="#" className="text-sm text-primary hover:text-primary/80">
-                  Forgot password?
-                </a>
+                <button
+                  type="button"
+                  onClick={handlePasswordReset}
+                  disabled={isResettingPassword}
+                  className="text-sm text-primary hover:text-primary/80"
+                >
+                  {isResettingPassword ? "Sending..." : "Forgot password?"}
+                </button>
               </div>
               
               <Button
@@ -131,22 +168,6 @@ const SignIn = () => {
               >
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
-              
-              <div className="text-sm text-center text-muted-foreground">
-                For demo purposes, use:
-                <div className="mt-1 font-mono text-xs bg-secondary/50 p-2 rounded">
-                  <div className="mb-2">
-                    <strong>Student:</strong><br />
-                    Email: demo@example.com<br />
-                    Password: password
-                  </div>
-                  <div>
-                    <strong>Instructor:</strong><br />
-                    Email: instructor@example.com<br />
-                    Password: password
-                  </div>
-                </div>
-              </div>
             </form>
             
             <div className="mt-6 text-center">

@@ -1,9 +1,8 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
+import { supabase, signIn, signUp, signOut } from '@/lib/supabase';
 
-// Create the auth context
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
@@ -12,81 +11,94 @@ export function AuthProvider({ children }) {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  // On mount, check if user is logged in (from localStorage)
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Login function
-  const login = (email, password) => {
-    // This is a mock implementation - in a real app, you would call your API
-    return new Promise((resolve, reject) => {
-      // Simulate API call delay
-      setTimeout(() => {
-        // Simple mock authentication for demo
-        if (email === 'demo@example.com' && password === 'password') {
-          const userData = { id: '1', email, name: 'Demo User', role: 'student' };
-          setUser(userData);
-          localStorage.setItem('user', JSON.stringify(userData));
-          toast({
-            title: "Welcome back!",
-            description: "You've successfully signed in as a student.",
-          });
-          resolve(userData);
-        } else if (email === 'instructor@example.com' && password === 'password') {
-          const userData = { id: '2', email, name: 'Instructor User', role: 'instructor' };
-          setUser(userData);
-          localStorage.setItem('user', JSON.stringify(userData));
-          toast({
-            title: "Welcome back!",
-            description: "You've successfully signed in as an instructor.",
-          });
-          resolve(userData);
-        } else {
-          reject(new Error('Invalid email or password'));
-        }
-      }, 1000);
-    });
+  const login = async (email, password) => {
+    try {
+      const { user: authUser } = await signIn({ email, password });
+      setUser(authUser);
+      toast({
+        title: "Welcome back!",
+        description: "You've successfully signed in.",
+      });
+      return authUser;
+    } catch (error) {
+      toast({
+        title: "Authentication failed",
+        description: error.message,
+        variant: "destructive"
+      });
+      throw error;
+    }
   };
 
-  // Register function
-  const register = (userData) => {
-    // This is a mock implementation - in a real app, you would call your API
-    return new Promise((resolve, reject) => {
-      // Simulate API call delay
-      setTimeout(() => {
-        // In a real implementation, you would validate and create the user on the server
-        const newUser = {
-          id: Math.random().toString(36).substr(2, 9),
-          email: userData.email,
-          name: `${userData.firstName} ${userData.lastName}`,
-          role: userData.role || 'student',
-        };
-        
-        setUser(newUser);
-        localStorage.setItem('user', JSON.stringify(newUser));
-        toast({
-          title: "Account created!",
-          description: `Welcome to our learning platform as a ${newUser.role}!`,
-        });
-        resolve(newUser);
-      }, 1000);
-    });
+  const register = async (userData) => {
+    try {
+      const { user: authUser } = await signUp({
+        email: userData.email,
+        password: userData.password,
+        ...userData
+      });
+      
+      // Create profile in profiles table
+      if (authUser) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: authUser.id,
+            first_name: userData.firstName,
+            last_name: userData.lastName,
+            role: 'student', // Default role
+          });
+
+        if (profileError) throw profileError;
+      }
+
+      toast({
+        title: "Account created!",
+        description: "Please check your email to verify your account.",
+      });
+      
+      return authUser;
+    } catch (error) {
+      toast({
+        title: "Registration failed",
+        description: error.message,
+        variant: "destructive"
+      });
+      throw error;
+    }
   };
 
-  // Logout function
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-    toast({
-      title: "Signed out",
-      description: "You've been successfully signed out.",
-    });
-    navigate('/');
+  const logout = async () => {
+    try {
+      await signOut();
+      setUser(null);
+      toast({
+        title: "Signed out",
+        description: "You've been successfully signed out.",
+      });
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to sign out.",
+        variant: "destructive"
+      });
+    }
   };
 
   const value = {
@@ -101,7 +113,6 @@ export function AuthProvider({ children }) {
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-// Custom hook to use the auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (context === null) {
