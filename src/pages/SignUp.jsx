@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
@@ -8,9 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SignUp = () => {
   const { toast } = useToast();
+  const { register } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -25,7 +27,7 @@ const SignUp = () => {
     setFormData({ ...formData, [e.target.name]: value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (formData.password !== formData.confirmPassword) {
@@ -46,13 +48,19 @@ const SignUp = () => {
       return;
     }
 
-    // This would connect to your authentication service in a real app
-    toast({
-      title: "Account created!",
-      description: "Welcome to NextGEN Investments!",
-    });
-    
-    console.log("Form submitted:", formData);
+    setIsLoading(true);
+    try {
+      await register({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName
+      });
+    } catch (error) {
+      console.error("Registration error:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -160,8 +168,9 @@ const SignUp = () => {
               <Button
                 type="submit"
                 className="w-full h-12 bg-primary text-primary-foreground font-medium shadow-sm transition-apple hover:shadow-md hover:bg-primary/90 active:scale-[0.98]"
+                disabled={isLoading}
               >
-                Create Account
+                {isLoading ? "Creating Account..." : "Create Account"}
               </Button>
             </form>
             

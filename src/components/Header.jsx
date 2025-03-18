@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "react-router-dom";
@@ -71,7 +70,9 @@ const Header = () => {
         <div className="hidden md:flex items-center space-x-6">
           {isAuthenticated ? (
             <div className="flex items-center space-x-4">
-              <span className="text-white/90">Hello, {user.name.split(' ')[0]}</span>
+              <span className="text-white/90">
+                Hello, {user.raw_user_meta_data?.firstName || 'User'}
+              </span>
               <button
                 onClick={handleLogout}
                 className="text-base font-medium text-white/90 hover:text-white transition-apple"
