@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -17,7 +16,12 @@ import CoursesPage from "./pages/CoursesPage";
 import CourseCreatePage from "./pages/CourseCreatePage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import CourseEditPage from "./pages/CourseEditPage";
+import AdminDashboard from "./pages/AdminDashboard";
+import UsersPage from "./pages/UsersPage";
+import RoleRequestsPage from "./pages/RoleRequestsPage";
 import "./App.css";
+import ProtectedRoute from './components/ProtectedRoute';
+import { RBACProvider } from './contexts/RBACContext';
 
 const queryClient = new QueryClient();
 
@@ -28,21 +32,96 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/signin" element={<SignIn />} />
-            <Route path="/signup" element={<SignUp />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/courses" element={<CoursesAndPricing />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/instructor-dashboard" element={<InstructorDashboard />} />
-            <Route path="/instructor-dashboard/courses" element={<CoursesPage />} />
-            <Route path="/instructor-dashboard/courses/new" element={<CourseCreatePage />} />
-            <Route path="/instructor-dashboard/courses/:courseId" element={<CourseDetailPage />} />
-            <Route path="/instructor-dashboard/courses/:courseId/edit" element={<CourseEditPage />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <RBACProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/signin" element={<SignIn />} />
+              <Route path="/signup" element={<SignUp />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/courses" element={<CoursesAndPricing />} />
+              
+              {/* Student Route */}
+              <Route 
+                path="/dashboard" 
+                element={
+                  <ProtectedRoute requiredRole="student">
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Instructor Routes */}
+              <Route 
+                path="/instructor-dashboard" 
+                element={
+                  <ProtectedRoute requiredRole="instructor">
+                    <InstructorDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/instructor-dashboard/courses" 
+                element={
+                  <ProtectedRoute requiredRole="instructor">
+                    <CoursesPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/instructor-dashboard/courses/new" 
+                element={
+                  <ProtectedRoute requiredRole="instructor">
+                    <CourseCreatePage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/instructor-dashboard/courses/:courseId" 
+                element={
+                  <ProtectedRoute requiredRole="instructor">
+                    <CourseDetailPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/instructor-dashboard/courses/:courseId/edit" 
+                element={
+                  <ProtectedRoute requiredRole="instructor">
+                    <CourseEditPage />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Admin Routes */}
+              <Route 
+                path="/admin-dashboard" 
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin-dashboard/users" 
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <UsersPage />
+                  </ProtectedRoute>
+                } 
+              />
+              <Route 
+                path="/admin-dashboard/role-requests" 
+                element={
+                  <ProtectedRoute requiredRole="admin">
+                    <RoleRequestsPage />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Catch all route */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </RBACProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

@@ -2,12 +2,15 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useRBAC } from '@/contexts/RBACContext';
+import RoleBasedElement from './RoleBasedElement';
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
+  const { userRole } = useRBAC();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -57,13 +60,37 @@ const Header = () => {
           >
             Courses and Pricing
           </Link>
+          
+          {/* Role-based navigation links */}
           {isAuthenticated && (
-            <Link
-              to="/dashboard"
-              className="text-base font-medium text-white/90 hover:text-white transition-apple"
-            >
-              Dashboard
-            </Link>
+            <>
+              <RoleBasedElement requiredRole="student">
+                <Link
+                  to="/dashboard"
+                  className="text-base font-medium text-white/90 hover:text-white transition-apple"
+                >
+                  Dashboard
+                </Link>
+              </RoleBasedElement>
+              
+              <RoleBasedElement requiredRole="instructor">
+                <Link
+                  to="/instructor-dashboard"
+                  className="text-base font-medium text-white/90 hover:text-white transition-apple"
+                >
+                  Instructor Portal
+                </Link>
+              </RoleBasedElement>
+              
+              <RoleBasedElement requiredRole="admin">
+                <Link
+                  to="/admin-dashboard"
+                  className="text-base font-medium text-white/90 hover:text-white transition-apple"
+                >
+                  Admin Console
+                </Link>
+              </RoleBasedElement>
+            </>
           )}
         </nav>
 
@@ -146,13 +173,37 @@ const Header = () => {
             Courses and Pricing
           </Link>
           {isAuthenticated && (
-            <Link
-              to="/dashboard"
-              className="block py-2 text-lg font-medium text-white"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Dashboard
-            </Link>
+            <>
+              <RoleBasedElement requiredRole="student">
+                <Link
+                  to="/dashboard"
+                  className="block py-2 text-lg font-medium text-white"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              </RoleBasedElement>
+              
+              <RoleBasedElement requiredRole="instructor">
+                <Link
+                  to="/instructor-dashboard"
+                  className="block py-2 text-lg font-medium text-white"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Instructor Portal
+                </Link>
+              </RoleBasedElement>
+              
+              <RoleBasedElement requiredRole="admin">
+                <Link
+                  to="/admin-dashboard"
+                  className="block py-2 text-lg font-medium text-white"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Admin Console
+                </Link>
+              </RoleBasedElement>
+            </>
           )}
           {isAuthenticated ? (
             <button
