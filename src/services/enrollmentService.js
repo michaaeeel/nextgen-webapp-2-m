@@ -26,7 +26,8 @@ export const enrollInCourse = async (userId, courseId) => {
       user_id: userId,
       course_id: courseId,
       enrolled_at: new Date().toISOString(),
-      status: 'active'
+      status: 'active',
+      payment_status: 'completed' // In a real app with Stripe, this would be set after payment
     })
     .select()
     .single();
@@ -53,7 +54,8 @@ export const getEnrolledCourses = async (userId) => {
     ...enrollment.course,
     enrollmentId: enrollment.id,
     enrolledAt: enrollment.enrolled_at,
-    status: enrollment.status
+    status: enrollment.status,
+    paymentStatus: enrollment.payment_status
   }));
 };
 
@@ -75,7 +77,8 @@ export const getEnrolledStudents = async (courseId) => {
     ...enrollment.student,
     enrollmentId: enrollment.id,
     enrolledAt: enrollment.enrolled_at,
-    status: enrollment.status
+    status: enrollment.status,
+    paymentStatus: enrollment.payment_status
   }));
 };
 

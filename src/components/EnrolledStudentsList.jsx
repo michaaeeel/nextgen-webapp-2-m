@@ -3,8 +3,10 @@ import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getEnrolledStudents } from "@/services/enrollmentService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CalendarIcon, UserIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CalendarIcon, UserIcon, Mail, Clock } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const EnrolledStudentsList = ({ courseId }) => {
   const { 
@@ -46,30 +48,47 @@ const EnrolledStudentsList = ({ courseId }) => {
         <CardTitle>Enrolled Students ({students.length})</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {students.map((student) => (
-            <div 
-              key={student.id} 
-              className="p-4 border rounded-md flex justify-between items-center"
-            >
-              <div className="flex items-center">
-                <div className="w-10 h-10 bg-muted rounded-full flex items-center justify-center mr-3">
-                  <UserIcon className="h-5 w-5" />
-                </div>
-                <div>
-                  <h4 className="font-medium">
-                    {student.first_name} {student.last_name}
-                  </h4>
-                  <p className="text-sm text-muted-foreground">{student.email}</p>
-                </div>
-              </div>
-              <div className="text-sm text-muted-foreground flex items-center">
-                <CalendarIcon className="h-4 w-4 mr-1" />
-                <span>Enrolled {formatDistanceToNow(new Date(student.enrolledAt))} ago</span>
-              </div>
-            </div>
-          ))}
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Student</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Enrollment Date</TableHead>
+              <TableHead>Status</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {students.map((student) => (
+              <TableRow key={student.enrollmentId}>
+                <TableCell>
+                  <div className="flex items-center">
+                    <div className="w-8 h-8 bg-muted rounded-full flex items-center justify-center mr-3">
+                      <UserIcon className="h-4 w-4" />
+                    </div>
+                    <span className="font-medium">
+                      {student.first_name} {student.last_name}
+                    </span>
+                  </div>
+                </TableCell>
+                <TableCell className="flex items-center">
+                  <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                  {student.email}
+                </TableCell>
+                <TableCell>
+                  <div className="flex items-center text-sm text-muted-foreground">
+                    <CalendarIcon className="h-4 w-4 mr-1" />
+                    {formatDistanceToNow(new Date(student.enrolledAt))} ago
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Badge className={student.status === 'active' ? 'bg-green-500' : 'bg-gray-500'}>
+                    {student.status}
+                  </Badge>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   );
