@@ -172,6 +172,204 @@ export const processRoleChangeRequest = async (requestId, approve, reason) => {
   return { success: true };
 };
 
+// Invitation management functions
+export const sendInstructorInvitation = async (email, firstName, lastName) => {
+  const currentUser = (await supabase.auth.getUser()).data.user;
+  
+  // Generate random password and token
+  const generatePassword = () => {
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
+    let password = "";
+    for (let i = 0; i < 12; i++) {
+      password += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return password;
+  };
+  
+  const tempPassword = generatePassword();
+  const token = crypto.randomUUID();
+  
+  // Calculate expiration date (7 days from now)
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+  
+  // Insert invitation record
+  const { data, error } = await supabase
+    .from('user_invitations')
+    .insert({
+      email,
+      first_name: firstName,
+      last_name: lastName,
+      role: 'instructor',
+      invited_by: currentUser.id,
+      token,
+      temp_password: tempPassword,
+      expires_at: expiresAt.toISOString(),
+      status: 'pending'
+    })
+    .select()
+    .single();
+    
+  if (error) throw error;
+  
+  // Prepare email parameters for Supabase Auth email sending
+  const inviteUrl = `${window.location.origin}/accept-invitation?token=${token}`;
+  
+  // Using Supabase Auth to send the email
+  const { error: emailError } = await supabase.auth.resetPasswordForEmail(
+    email,
+    {
+      redirectTo: inviteUrl,
+      data: {
+        invite_token: token,
+        temp_password: tempPassword
+      }
+    }
+  );
+  
+  if (emailError) throw emailError;
+  
+  return { success: true, invitation: data };
+};
+
+export const resendInvitation = async (invitationId) => {
+  // Get the invitation details
+  const { data: invitation, error: fetchError } = await supabase
+    .from('user_invitations')
+    .select('*')
+    .eq('id', invitationId)
+    .single();
+    
+  if (fetchError) throw fetchError;
+  
+  // Generate new token and expiration date
+  const token = crypto.randomUUID();
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 7);
+  
+  // Update the invitation with new token and expiration
+  const { error: updateError } = await supabase
+    .from('user_invitations')
+    .update({
+      token,
+      expires_at: expiresAt.toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', invitationId);
+    
+  if (updateError) throw updateError;
+  
+  // Prepare invitation URL
+  const inviteUrl = `${window.location.origin}/accept-invitation?token=${token}`;
+  
+  // Send email through Supabase Auth
+  const { error: emailError } = await supabase.auth.resetPasswordForEmail(
+    invitation.email,
+    {
+      redirectTo: inviteUrl,
+      data: {
+        invite_token: token,
+        temp_password: invitation.temp_password
+      }
+    }
+  );
+  
+  if (emailError) throw emailError;
+  
+  return { success: true };
+};
+
+export const cancelInvitation = async (invitationId) => {
+  const { error } = await supabase
+    .from('user_invitations')
+    .update({
+      status: 'cancelled',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', invitationId);
+    
+  if (error) throw error;
+  
+  return { success: true };
+};
+
+export const validateInvitationToken = async (token) => {
+  const { data, error } = await supabase
+    .from('user_invitations')
+    .select('*')
+    .eq('token', token)
+    .eq('status', 'pending')
+    .single();
+  
+  if (error) throw error;
+  
+  // Check if invitation has expired
+  const expiryDate = new Date(data.expires_at);
+  if (expiryDate < new Date()) {
+    // Update invitation status to expired
+    await supabase
+      .from('user_invitations')
+      .update({ 
+        status: 'expired',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', data.id);
+      
+    throw new Error('This invitation has expired.');
+  }
+  
+  return data;
+};
+
+export const acceptInvitation = async (token, password) => {
+  // Get invitation details
+  const invitation = await validateInvitationToken(token);
+  
+  // Create a new user in Supabase Auth
+  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+    email: invitation.email,
+    password: password,
+    options: {
+      data: {
+        first_name: invitation.first_name,
+        last_name: invitation.last_name,
+        role: invitation.role
+      }
+    }
+  });
+  
+  if (signUpError) throw signUpError;
+  
+  // Create a profile entry
+  const { error: profileError } = await supabase
+    .from('profiles')
+    .insert({
+      id: signUpData.user.id,
+      first_name: invitation.first_name,
+      last_name: invitation.last_name,
+      email: invitation.email,
+      role: invitation.role,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    });
+    
+  if (profileError) throw profileError;
+  
+  // Update invitation status to accepted
+  const { error: updateError } = await supabase
+    .from('user_invitations')
+    .update({
+      status: 'accepted',
+      accepted_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', invitation.id);
+    
+  if (updateError) throw updateError;
+  
+  return { success: true };
+};
+
 export const inviteUser = async (email, role) => {
   // Generate a unique token
   const token = crypto.randomUUID();

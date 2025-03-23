@@ -102,12 +102,26 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const getAllUsers = () => {
+    try {
+      return JSON.parse(localStorage.getItem('users') || '[]');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load users.",
+        variant: "destructive"
+      });
+      return [];
+    }
+  };
+
   const value = {
     user,
     loading,
     login,
     register,
     logout,
+    getAllUsers,
     isAuthenticated: !!user,
   };
 

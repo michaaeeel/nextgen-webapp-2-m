@@ -4,10 +4,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useRBAC } from '@/contexts/RBACContext';
 import RoleBasedElement from './RoleBasedElement';
+import { ChevronDown, Users, Mail, ClipboardList, LayoutDashboard } from "lucide-react";
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [adminMenuOpen, setAdminMenuOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const { userRole } = useRBAC();
@@ -83,12 +85,55 @@ const Header = () => {
               </RoleBasedElement>
               
               <RoleBasedElement requiredRole="admin">
-                <Link
-                  to="/admin-dashboard"
-                  className="text-base font-medium text-white/90 hover:text-white transition-apple"
-                >
-                  Admin Console
-                </Link>
+                <div className="relative">
+                  <button
+                    onClick={() => setAdminMenuOpen(!adminMenuOpen)}
+                    className="flex items-center text-base font-medium text-white/90 hover:text-white transition-apple"
+                    onBlur={() => setTimeout(() => setAdminMenuOpen(false), 100)}
+                  >
+                    Admin Console
+                    <ChevronDown className={cn("ml-1 h-4 w-4 transition-transform", adminMenuOpen ? "rotate-180" : "")} />
+                  </button>
+                  
+                  {adminMenuOpen && (
+                    <div className="absolute top-full left-0 mt-1 w-56 bg-white rounded-md shadow-lg overflow-hidden z-20">
+                      <div className="py-1">
+                        <Link
+                          to="/admin-dashboard"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setAdminMenuOpen(false)}
+                        >
+                          <LayoutDashboard className="mr-2 h-4 w-4" />
+                          Dashboard
+                        </Link>
+                        <Link
+                          to="/admin-dashboard/users"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setAdminMenuOpen(false)}
+                        >
+                          <Users className="mr-2 h-4 w-4" />
+                          User Management
+                        </Link>
+                        <Link
+                          to="/admin-dashboard/invitations"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setAdminMenuOpen(false)}
+                        >
+                          <Mail className="mr-2 h-4 w-4" />
+                          Invitations
+                        </Link>
+                        <Link
+                          to="/admin-dashboard/role-requests"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setAdminMenuOpen(false)}
+                        >
+                          <ClipboardList className="mr-2 h-4 w-4" />
+                          Role Requests
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </RoleBasedElement>
             </>
           )}
@@ -195,13 +240,43 @@ const Header = () => {
               </RoleBasedElement>
               
               <RoleBasedElement requiredRole="admin">
-                <Link
-                  to="/admin-dashboard"
-                  className="block py-2 text-lg font-medium text-white"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Admin Console
-                </Link>
+                <div className="py-2">
+                  <div className="text-lg font-medium text-white mb-2">Admin Console</div>
+                  <div className="pl-4 border-l-2 border-white/20 space-y-2">
+                    <Link
+                      to="/admin-dashboard"
+                      className="block py-1 text-base text-white/90 hover:text-white flex items-center"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </Link>
+                    <Link
+                      to="/admin-dashboard/users"
+                      className="block py-1 text-base text-white/90 hover:text-white flex items-center"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Users className="mr-2 h-4 w-4" />
+                      User Management
+                    </Link>
+                    <Link
+                      to="/admin-dashboard/invitations"
+                      className="block py-1 text-base text-white/90 hover:text-white flex items-center"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Mail className="mr-2 h-4 w-4" />
+                      Invitations
+                    </Link>
+                    <Link
+                      to="/admin-dashboard/role-requests"
+                      className="block py-1 text-base text-white/90 hover:text-white flex items-center"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <ClipboardList className="mr-2 h-4 w-4" />
+                      Role Requests
+                    </Link>
+                  </div>
+                </div>
               </RoleBasedElement>
             </>
           )}
