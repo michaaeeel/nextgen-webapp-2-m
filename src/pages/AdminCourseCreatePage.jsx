@@ -19,9 +19,23 @@ const AdminCourseCreatePage = () => {
   const { createCourse } = useCourses();
   const { toast } = useToast();
 
-  const handleSubmit = (courseData) => {
+  const handleSubmit = async (data) => {
     try {
-      const createdCourse = createCourse(courseData);
+      // Map form data to match the database structure
+      const courseData = {
+        title: data.title,
+        description: data.description,
+        cover_image: data.coverImage,
+        price: data.price,
+        discount_price: data.discountPrice || null,
+        category: data.category,
+        level: data.level,
+        is_published: data.isPublished,
+        modules: data.modules,
+        assignments: data.assignments
+      };
+      
+      const createdCourse = await createCourse(courseData);
       
       toast({
         title: "Success",

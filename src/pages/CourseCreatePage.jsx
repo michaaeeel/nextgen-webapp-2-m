@@ -3,6 +3,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createCourse as createCourseApi } from '@/services/courseService';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CourseForm from "@/components/CourseForm";
@@ -11,32 +13,44 @@ const CourseCreatePage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  // Create course mutation
+  const createCourseMutation = useMutation({
+    mutationFn: createCourseApi,
+    onSuccess: (newCourse) => {
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      
+      toast({
+        title: "Course Created",
+        description: "Your new course has been created successfully.",
+      });
+      
+      navigate(`/instructor-dashboard/courses/${newCourse.id}`);
+    },
+    onError: (err) => {
+      toast({
+        title: "Error Creating Course",
+        description: err.message || "Failed to create course",
+        variant: "destructive"
+      });
+    }
+  });
 
   const handleSubmit = (courseData) => {
-    // Get existing courses or initialize empty array
-    const existingCourses = JSON.parse(localStorage.getItem('courses') || '[]');
-    
-    // Create new course with ID, dates, and instructor info
+    // Map form data to match the database structure
     const newCourse = {
-      id: Date.now().toString(),
-      ...courseData,
-      instructorId: user.id,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      enrolledStudents: [],
+      title: courseData.title,
+      description: courseData.description,
+      instructor_id: user.id,
+      instructor_name: courseData.instructorName || user.name,
+      modules: courseData.modules,
+      assignments: courseData.assignments,
+      enrolled_students: [],
+      is_published: false
     };
     
-    // Save to localStorage
-    localStorage.setItem('courses', JSON.stringify([...existingCourses, newCourse]));
-    
-    // Show success message
-    toast({
-      title: "Course Created",
-      description: "Your new course has been created successfully.",
-    });
-    
-    // Navigate back to courses list
-    navigate('/instructor-dashboard/courses');
+    createCourseMutation.mutate(newCourse);
   };
 
   return (

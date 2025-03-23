@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCourses } from '@/contexts/CourseContext';
@@ -42,9 +43,9 @@ const AdminCoursesPage = () => {
     setIsDeleteDialogOpen(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     try {
-      deleteCourse(selectedCourseId);
+      await deleteCourse(selectedCourseId);
       toast({
         title: "Success",
         description: "Course deleted successfully!",
@@ -65,6 +66,26 @@ const AdminCoursesPage = () => {
     navigate(`/admin-dashboard/courses/${courseId}/assign-instructor`);
   };
 
+  // Convert snake_case database fields to camelCase for component props
+  const formattedCourses = courses.map(course => ({
+    id: course.id,
+    title: course.title,
+    description: course.description,
+    coverImage: course.cover_image,
+    price: course.price,
+    discountPrice: course.discount_price,
+    category: course.category,
+    level: course.level,
+    isPublished: course.is_published,
+    instructorId: course.instructor_id,
+    instructorName: course.instructor_name,
+    modules: course.modules || [],
+    assignments: course.assignments || [],
+    enrolledStudents: course.enrolled_students || [],
+    createdAt: course.created_at,
+    updatedAt: course.updated_at
+  }));
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -81,7 +102,7 @@ const AdminCoursesPage = () => {
           
           {loading ? (
             <div className="text-center py-8">Loading courses...</div>
-          ) : courses.length === 0 ? (
+          ) : formattedCourses.length === 0 ? (
             <div className="text-center py-16 bg-muted rounded-lg">
               <h2 className="text-xl font-medium mb-2">No Courses Found</h2>
               <p className="text-muted-foreground mb-6">
@@ -94,7 +115,7 @@ const AdminCoursesPage = () => {
             </div>
           ) : (
             <CourseList 
-              courses={courses} 
+              courses={formattedCourses} 
               onView={handleViewCourse}
               onEdit={handleEditCourse}
               onDelete={handleDeleteCourse}
@@ -131,4 +152,4 @@ const AdminCoursesPage = () => {
   );
 };
 
-export default AdminCoursesPage; 
+export default AdminCoursesPage;

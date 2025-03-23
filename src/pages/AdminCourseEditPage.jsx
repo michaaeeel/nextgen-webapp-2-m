@@ -2,6 +2,8 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCourses } from '@/contexts/CourseContext';
+import { useQuery } from '@tanstack/react-query';
+import { fetchCourseById } from '@/services/courseService';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { Button } from '@/components/ui/button';
@@ -18,29 +20,55 @@ import AdminCourseForm from '@/components/AdminCourseForm';
 const AdminCourseEditPage = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { getCourse, updateCourse, loading } = useCourses();
+  const { updateCourse } = useCourses();
   const { toast } = useToast();
-  const [course, setCourse] = useState(null);
+  
+  // Fetch course data
+  const { 
+    data: course, 
+    isLoading: loading, 
+    error 
+  } = useQuery({
+    queryKey: ['course', courseId],
+    queryFn: () => fetchCourseById(courseId),
+    onError: (err) => {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to load course",
+        variant: "destructive"
+      });
+      navigate('/admin-dashboard/courses');
+    }
+  });
 
   useEffect(() => {
-    if (!loading) {
-      const courseData = getCourse(courseId);
-      if (courseData) {
-        setCourse(courseData);
-      } else {
-        toast({
-          title: "Error",
-          description: "Course not found",
-          variant: "destructive"
-        });
-        navigate('/admin-dashboard/courses');
-      }
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Course not found",
+        variant: "destructive"
+      });
+      navigate('/admin-dashboard/courses');
     }
-  }, [courseId, getCourse, loading, navigate, toast]);
+  }, [error, navigate, toast]);
 
-  const handleSubmit = (data) => {
+  const handleSubmit = async (data) => {
     try {
-      updateCourse(courseId, data);
+      // Map form data to match the database structure
+      const courseData = {
+        title: data.title,
+        description: data.description,
+        cover_image: data.coverImage,
+        price: data.price,
+        discount_price: data.discountPrice || null,
+        category: data.category,
+        level: data.level,
+        is_published: data.isPublished,
+        modules: data.modules,
+        assignments: data.assignments
+      };
+      
+      await updateCourse(courseId, courseData);
       
       toast({
         title: "Success",
@@ -75,6 +103,20 @@ const AdminCourseEditPage = () => {
     );
   }
 
+  // Map database fields to form field names
+  const formData = {
+    title: course.title,
+    description: course.description,
+    coverImage: course.cover_image,
+    price: course.price,
+    discountPrice: course.discount_price,
+    category: course.category,
+    level: course.level,
+    isPublished: course.is_published,
+    modules: course.modules || [],
+    assignments: course.assignments || []
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -92,7 +134,7 @@ const AdminCourseEditPage = () => {
               
               <CardContent>
                 <AdminCourseForm 
-                  course={course}
+                  course={formData}
                   onSubmit={handleSubmit}
                   onCancel={handleCancel}
                   isEditing={true}

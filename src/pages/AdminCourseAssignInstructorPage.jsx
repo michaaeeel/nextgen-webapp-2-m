@@ -1,7 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useCourses } from '@/contexts/CourseContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useQuery } from '@tanstack/react-query';
+import { fetchCourseById } from '@/services/courseService';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { 
@@ -26,38 +29,43 @@ import { ChevronLeft, UserCheck } from "lucide-react";
 const AdminCourseAssignInstructorPage = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
-  const { getCourse, assignInstructor, loading } = useCourses();
+  const { assignInstructor } = useCourses();
   const { getAllUsers } = useAuth();
-  const [course, setCourse] = useState(null);
   const [instructors, setInstructors] = useState([]);
   const [selectedInstructorId, setSelectedInstructorId] = useState('');
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!loading) {
-      const courseData = getCourse(courseId);
-      if (courseData) {
-        setCourse(courseData);
-        setSelectedInstructorId(courseData.instructorId || '');
-      } else {
-        toast({
-          title: "Error",
-          description: "Course not found",
-          variant: "destructive"
-        });
-        navigate('/admin-dashboard/courses');
-      }
-
-      // Get all instructors
-      const users = getAllUsers();
-      const instructorUsers = users.filter(user => user.role === 'instructor');
-      setInstructors(instructorUsers);
+  // Fetch course data
+  const { 
+    data: course, 
+    isLoading 
+  } = useQuery({
+    queryKey: ['course', courseId],
+    queryFn: () => fetchCourseById(courseId),
+    onError: (err) => {
+      toast({
+        title: "Error",
+        description: err.message || "Failed to load course",
+        variant: "destructive"
+      });
+      navigate('/admin-dashboard/courses');
     }
-  }, [courseId, getCourse, getAllUsers, loading, navigate, toast]);
+  });
 
-  const handleAssign = () => {
+  useEffect(() => {
+    if (course) {
+      setSelectedInstructorId(course.instructor_id || '');
+    }
+    
+    // Get all instructors
+    const users = getAllUsers();
+    const instructorUsers = users.filter(user => user.role === 'instructor');
+    setInstructors(instructorUsers);
+  }, [course, getAllUsers]);
+
+  const handleAssign = async () => {
     try {
-      assignInstructor(courseId, selectedInstructorId);
+      await assignInstructor(courseId, selectedInstructorId);
       
       toast({
         title: "Success",
@@ -74,7 +82,7 @@ const AdminCourseAssignInstructorPage = () => {
     }
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
@@ -186,4 +194,4 @@ const AdminCourseAssignInstructorPage = () => {
   );
 };
 
-export default AdminCourseAssignInstructorPage; 
+export default AdminCourseAssignInstructorPage;
