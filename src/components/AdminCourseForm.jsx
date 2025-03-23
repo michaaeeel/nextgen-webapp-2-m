@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -23,7 +23,7 @@ const formSchema = z.object({
   isPublished: z.boolean().default(false),
 });
 
-const AdminCourseForm = ({ onSubmit, onCancel }) => {
+const AdminCourseForm = ({ course, onSubmit, onCancel, isEditing = false }) => {
   const { toast } = useToast();
   
   // State for modules and assignments
@@ -43,16 +43,29 @@ const AdminCourseForm = ({ onSubmit, onCancel }) => {
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: '',
-      description: '',
-      coverImage: '',
-      price: '',
-      discountPrice: '',
-      category: '',
-      level: 'beginner',
-      isPublished: false,
+      title: course?.title || '',
+      description: course?.description || '',
+      coverImage: course?.coverImage || '',
+      price: course?.price || '',
+      discountPrice: course?.discountPrice || '',
+      category: course?.category || '',
+      level: course?.level || 'beginner',
+      isPublished: course?.isPublished || false,
     },
   });
+
+  // Load existing modules and assignments when editing
+  useEffect(() => {
+    if (course && isEditing) {
+      if (course.modules && course.modules.length > 0) {
+        setModules(course.modules);
+      }
+      
+      if (course.assignments && course.assignments.length > 0) {
+        setAssignments(course.assignments);
+      }
+    }
+  }, [course, isEditing]);
 
   // Handlers for modules
   const handleModuleChange = (index, field, value) => {
@@ -113,18 +126,18 @@ const AdminCourseForm = ({ onSubmit, onCancel }) => {
       const filteredModules = modules.filter(module => module.title.trim() !== '');
       const filteredAssignments = assignments.filter(assignment => assignment.title.trim() !== '');
       
-      const newCourse = {
+      const courseData = {
         ...data,
         discountPrice: data.discountPrice || null,
         modules: filteredModules,
         assignments: filteredAssignments
       };
       
-      onSubmit(newCourse);
+      onSubmit(courseData);
     } catch (error) {
       toast({
         title: "Error",
-        description: error.message || "Failed to create course",
+        description: error.message || "Failed to save course",
         variant: "destructive"
       });
     }
@@ -163,7 +176,9 @@ const AdminCourseForm = ({ onSubmit, onCancel }) => {
           >
             Cancel
           </Button>
-          <Button type="submit">Create Course</Button>
+          <Button type="submit">
+            {isEditing ? 'Update Course' : 'Create Course'}
+          </Button>
         </div>
       </form>
     </Form>
