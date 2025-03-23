@@ -1,158 +1,200 @@
 
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from "react";
+import { useCourses } from "@/contexts/CourseContext";
+import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Edit, ChevronLeft, User, Calendar, BookOpen, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import CourseModulesSection from "./CourseModulesSection";
+import CourseAssignmentsSection from "./CourseAssignmentsSection";
+import EnrolledStudentsList from "./EnrolledStudentsList";
 
-const CourseDetail = ({ course, onEdit }) => {
+const CourseDetail = ({ courseId, isAdmin = false }) => {
+  const { getCourse, toggleCoursePublishStatus, deleteCourse } = useCourses();
   const navigate = useNavigate();
-
+  const { toast } = useToast();
+  const [activeTab, setActiveTab] = React.useState("overview");
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  
+  const course = getCourse(courseId);
+  
   if (!course) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">Course not found</p>
-        <Button className="mt-4" onClick={() => navigate('/instructor-dashboard/courses')}>
-          Back to Courses
-        </Button>
-      </div>
-    );
+    return <div>Loading course details...</div>;
   }
+
+  const handleEdit = () => {
+    if (isAdmin) {
+      navigate(`/admin-dashboard/courses/${courseId}/edit`);
+    } else {
+      navigate(`/instructor-dashboard/courses/${courseId}/edit`);
+    }
+  };
+
+  const handleTogglePublish = async () => {
+    try {
+      await toggleCoursePublishStatus(courseId);
+      toast({
+        title: course.is_published ? "Course Unpublished" : "Course Published",
+        description: `The course is now ${course.is_published ? 'unpublished' : 'published'}.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "There was an error updating the course status.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!window.confirm("Are you sure you want to delete this course? This action cannot be undone.")) {
+      return;
+    }
+    
+    setIsDeleting(true);
+    
+    try {
+      await deleteCourse(courseId);
+      toast({
+        title: "Course Deleted",
+        description: "The course has been deleted successfully.",
+      });
+      if (isAdmin) {
+        navigate('/admin-dashboard/courses');
+      } else {
+        navigate('/instructor-dashboard/courses');
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "There was an error deleting the course.",
+        variant: "destructive",
+      });
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/instructor-dashboard/courses')}>
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-2xl font-bold">{course.title}</h1>
+      {/* Course header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold">{course.title}</h1>
+          {course.instructor_name && isAdmin && (
+            <p className="text-muted-foreground mt-1">
+              Instructor: {course.instructor_name}
+            </p>
+          )}
         </div>
-        <Button onClick={() => onEdit(course.id)} className="flex items-center gap-2">
-          <Edit size={16} />
-          Edit Course
-        </Button>
+        
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" onClick={handleEdit}>
+            Edit Course
+          </Button>
+          
+          <Button 
+            variant={course.is_published ? "default" : "secondary"}
+            onClick={handleTogglePublish}
+          >
+            {course.is_published ? "Unpublish" : "Publish"}
+          </Button>
+          
+          <Button 
+            variant="destructive" 
+            onClick={handleDelete}
+            disabled={isDeleting}
+          >
+            {isDeleting ? "Deleting..." : "Delete Course"}
+          </Button>
+        </div>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Course Overview</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <h3 className="text-sm font-medium text-muted-foreground mb-1">Description</h3>
-            <p>{course.description}</p>
-          </div>
-          <div className="flex flex-wrap gap-6">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">{course.instructorName}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">{course.modules.length} Modules</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">{course.assignments.length} Assignments</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">Created {new Date(course.createdAt).toLocaleDateString()}</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Tabs defaultValue="modules">
+      
+      {/* Course tabs */}
+      <Tabs 
+        defaultValue="overview" 
+        value={activeTab} 
+        onValueChange={setActiveTab} 
+        className="space-y-4"
+      >
         <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="modules">Modules</TabsTrigger>
           <TabsTrigger value="assignments">Assignments</TabsTrigger>
-          <TabsTrigger value="students">Enrolled Students</TabsTrigger>
+          <TabsTrigger value="students">Students</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="modules" className="space-y-4 mt-4">
-          {course.modules.length === 0 ? (
-            <Card className="p-6">
-              <p className="text-muted-foreground text-center">No modules have been added to this course yet.</p>
-            </Card>
-          ) : (
-            course.modules.map((module, index) => (
-              <Card key={index}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">
-                    Module {index + 1}: {module.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-2">{module.description}</p>
-                  {module.lessons && module.lessons.length > 0 ? (
-                    <div className="mt-4">
-                      <h4 className="text-sm font-medium mb-2">Lessons:</h4>
-                      <ul className="space-y-1 pl-4">
-                        {module.lessons.map((lesson, idx) => (
-                          <li key={idx} className="text-sm">{lesson.title}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  ) : null}
-                </CardContent>
-              </Card>
-            ))
-          )}
-        </TabsContent>
-        
-        <TabsContent value="assignments" className="space-y-4 mt-4">
-          {course.assignments.length === 0 ? (
-            <Card className="p-6">
-              <p className="text-muted-foreground text-center">No assignments have been added to this course yet.</p>
-            </Card>
-          ) : (
-            course.assignments.map((assignment, index) => (
-              <Card key={index}>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">{assignment.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground mb-2">{assignment.description}</p>
-                  {assignment.dueDate && (
-                    <div className="flex items-center gap-2 mt-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm">Due: {new Date(assignment.dueDate).toLocaleDateString()}</span>
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="md:col-span-2 space-y-4">
+              <div className="p-6 bg-card rounded-lg border">
+                <h2 className="text-xl font-semibold mb-2">Description</h2>
+                <p className="text-muted-foreground">
+                  {course.description || "No description provided."}
+                </p>
+              </div>
+              
+              {course.learning_objectives && (
+                <div className="p-6 bg-card rounded-lg border">
+                  <h2 className="text-xl font-semibold mb-2">Learning Objectives</h2>
+                  <div className="text-muted-foreground">
+                    {course.learning_objectives}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <div className="space-y-4">
+              <div className="p-6 bg-card rounded-lg border">
+                <h2 className="text-xl font-semibold mb-2">Course Details</h2>
+                <div className="space-y-2">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Level:</span>
+                    <span className="font-medium capitalize">{course.level || "Not specified"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Category:</span>
+                    <span className="font-medium capitalize">{course.category || "Not specified"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Duration:</span>
+                    <span className="font-medium">{course.duration || "Not specified"}</span>
+                  </div>
+                  {course.price !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Price:</span>
+                      <span className="font-medium">${course.price}</span>
                     </div>
                   )}
-                </CardContent>
-              </Card>
-            ))
-          )}
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Status:</span>
+                    <span className={`font-medium ${course.is_published ? "text-green-600" : "text-amber-600"}`}>
+                      {course.is_published ? "Published" : "Draft"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </TabsContent>
         
-        <TabsContent value="students" className="mt-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Enrolled Students</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {course.enrolledStudents && course.enrolledStudents.length > 0 ? (
-                <ul className="divide-y">
-                  {course.enrolledStudents.map((student, index) => (
-                    <li key={index} className="py-3 flex justify-between items-center">
-                      <div>
-                        <p className="font-medium">{student.name}</p>
-                        <p className="text-sm text-muted-foreground">{student.email}</p>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        Enrolled on {new Date(student.enrolledAt).toLocaleDateString()}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-muted-foreground text-center py-6">No students are enrolled in this course yet.</p>
-              )}
-            </CardContent>
-          </Card>
+        <TabsContent value="modules">
+          <CourseModulesSection 
+            courseId={courseId} 
+            modules={course.modules || []} 
+            isEditable={false}
+          />
+        </TabsContent>
+        
+        <TabsContent value="assignments">
+          <CourseAssignmentsSection 
+            courseId={courseId} 
+            assignments={course.assignments || []} 
+            isEditable={false}
+          />
+        </TabsContent>
+        
+        <TabsContent value="students">
+          <EnrolledStudentsList courseId={courseId} />
         </TabsContent>
       </Tabs>
     </div>
