@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCourses } from '@/contexts/CourseContext';
 import { useForm } from 'react-hook-form';
@@ -13,6 +14,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter
 } from '@/components/ui/card';
 import { 
   Form, 
@@ -24,6 +26,9 @@ import {
 } from '@/components/ui/form';
 import { useToast } from '@/components/ui/use-toast';
 import { Checkbox } from '@/components/ui/checkbox';
+import CourseModulesSection from '@/components/CourseModulesSection';
+import CourseAssignmentsSection from '@/components/CourseAssignmentsSection';
+import { isValidYoutubeUrl } from '@/utils/youtubeUtils';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 
@@ -44,6 +49,19 @@ const AdminCourseCreatePage = () => {
   const { createCourse } = useCourses();
   const { toast } = useToast();
   
+  // State for modules and assignments
+  const [modules, setModules] = useState([{ 
+    title: '', 
+    description: '', 
+    youtubeUrl: '',
+    content: '', 
+    lessons: [] 
+  }]);
+  
+  const [assignments, setAssignments] = useState([
+    { title: '', description: '', dueDate: '' }
+  ]);
+  
   // Initialize form with react-hook-form
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -59,11 +77,70 @@ const AdminCourseCreatePage = () => {
     },
   });
 
+  // Handlers for modules
+  const handleModuleChange = (index, field, value) => {
+    const updatedModules = [...modules];
+    updatedModules[index][field] = value;
+    setModules(updatedModules);
+  };
+  
+  const addModule = () => {
+    setModules([...modules, { 
+      title: '', 
+      description: '', 
+      youtubeUrl: '',
+      content: '', 
+      lessons: [] 
+    }]);
+  };
+  
+  const removeModule = (index) => {
+    const updatedModules = [...modules];
+    updatedModules.splice(index, 1);
+    setModules(updatedModules);
+  };
+
+  // Handlers for assignments
+  const handleAssignmentChange = (index, field, value) => {
+    const updatedAssignments = [...assignments];
+    updatedAssignments[index][field] = value;
+    setAssignments(updatedAssignments);
+  };
+  
+  const addAssignment = () => {
+    setAssignments([...assignments, { title: '', description: '', dueDate: '' }]);
+  };
+  
+  const removeAssignment = (index) => {
+    const updatedAssignments = [...assignments];
+    updatedAssignments.splice(index, 1);
+    setAssignments(updatedAssignments);
+  };
+
   const onSubmit = (data) => {
     try {
+      // Validate YouTube URLs
+      const invalidYoutubeUrls = modules
+        .filter(module => module.youtubeUrl && !isValidYoutubeUrl(module.youtubeUrl));
+      
+      if (invalidYoutubeUrls.length > 0) {
+        toast({
+          title: "Invalid YouTube URL",
+          description: "Please enter valid YouTube URLs for all modules.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Filter out empty modules and assignments
+      const filteredModules = modules.filter(module => module.title.trim() !== '');
+      const filteredAssignments = assignments.filter(assignment => assignment.title.trim() !== '');
+      
       const newCourse = {
         ...data,
         discountPrice: data.discountPrice || null,
+        modules: filteredModules,
+        assignments: filteredAssignments
       };
       
       const createdCourse = createCourse(newCourse);
@@ -102,6 +179,7 @@ const AdminCourseCreatePage = () => {
                 <Form {...form}>
                   <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="space-y-4">
+                      {/* Basic course information */}
                       <FormField
                         control={form.control}
                         name="title"
@@ -243,6 +321,26 @@ const AdminCourseCreatePage = () => {
                           </FormItem>
                         )}
                       />
+                      
+                      {/* Course Modules Section */}
+                      <div className="mt-8">
+                        <CourseModulesSection
+                          modules={modules}
+                          handleModuleChange={handleModuleChange}
+                          addModule={addModule}
+                          removeModule={removeModule}
+                        />
+                      </div>
+                      
+                      {/* Course Assignments Section */}
+                      <div className="mt-8">
+                        <CourseAssignmentsSection
+                          assignments={assignments}
+                          handleAssignmentChange={handleAssignmentChange}
+                          addAssignment={addAssignment}
+                          removeAssignment={removeAssignment}
+                        />
+                      </div>
                     </div>
 
                     <div className="flex justify-end space-x-4">
@@ -268,4 +366,4 @@ const AdminCourseCreatePage = () => {
   );
 };
 
-export default AdminCourseCreatePage; 
+export default AdminCourseCreatePage;
