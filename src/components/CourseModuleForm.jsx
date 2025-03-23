@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { X, Youtube, FileText } from "lucide-react";
+import { getYoutubeEmbedUrl } from "@/utils/youtubeUtils";
 
 const CourseModuleForm = ({ 
   module, 
@@ -13,27 +14,6 @@ const CourseModuleForm = ({
   onModuleChange, 
   onRemoveModule 
 }) => {
-  // YouTube URL validation and embed URL generation
-  const getYoutubeEmbedUrl = (url) => {
-    if (!url) return null;
-    
-    let videoId = null;
-    
-    // Match youtube.com/watch?v=ID format
-    const watchUrlMatch = url.match(/youtube\.com\/watch\?v=([^&]+)/);
-    if (watchUrlMatch) videoId = watchUrlMatch[1];
-    
-    // Match youtu.be/ID format
-    const shortUrlMatch = url.match(/youtu\.be\/([^?&]+)/);
-    if (shortUrlMatch) videoId = shortUrlMatch[1];
-    
-    // Match youtube.com/embed/ID format
-    const embedUrlMatch = url.match(/youtube\.com\/embed\/([^?&]+)/);
-    if (embedUrlMatch) videoId = embedUrlMatch[1];
-    
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-  };
-
   return (
     <Card key={index} className="p-4 relative">
       <Button

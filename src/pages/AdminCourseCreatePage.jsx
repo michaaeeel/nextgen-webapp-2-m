@@ -1,149 +1,27 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCourses } from '@/contexts/CourseContext';
-import { useForm } from 'react-hook-form';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/components/ui/use-toast';
 import { 
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-  CardFooter
 } from '@/components/ui/card';
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from '@/components/ui/form';
-import { useToast } from '@/components/ui/use-toast';
-import { Checkbox } from '@/components/ui/checkbox';
-import CourseModulesSection from '@/components/CourseModulesSection';
-import CourseAssignmentsSection from '@/components/CourseAssignmentsSection';
-import { isValidYoutubeUrl } from '@/utils/youtubeUtils';
-import * as z from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-
-// Define form validation schema
-const formSchema = z.object({
-  title: z.string().min(1, { message: 'Title is required' }),
-  description: z.string().min(1, { message: 'Description is required' }),
-  coverImage: z.string().min(1, { message: 'Cover image URL is required' }),
-  price: z.coerce.number().min(0, { message: 'Price must be a positive number' }),
-  discountPrice: z.coerce.number().min(0, { message: 'Discount price must be a positive number' }).optional().nullable(),
-  category: z.string().min(1, { message: 'Category is required' }),
-  level: z.enum(['beginner', 'intermediate', 'advanced']),
-  isPublished: z.boolean().default(false),
-});
+import AdminCourseForm from '@/components/AdminCourseForm';
 
 const AdminCourseCreatePage = () => {
   const navigate = useNavigate();
   const { createCourse } = useCourses();
   const { toast } = useToast();
-  
-  // State for modules and assignments
-  const [modules, setModules] = useState([{ 
-    title: '', 
-    description: '', 
-    youtubeUrl: '',
-    content: '', 
-    lessons: [] 
-  }]);
-  
-  const [assignments, setAssignments] = useState([
-    { title: '', description: '', dueDate: '' }
-  ]);
-  
-  // Initialize form with react-hook-form
-  const form = useForm({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      title: '',
-      description: '',
-      coverImage: '',
-      price: '',
-      discountPrice: '',
-      category: '',
-      level: 'beginner',
-      isPublished: false,
-    },
-  });
 
-  // Handlers for modules
-  const handleModuleChange = (index, field, value) => {
-    const updatedModules = [...modules];
-    updatedModules[index][field] = value;
-    setModules(updatedModules);
-  };
-  
-  const addModule = () => {
-    setModules([...modules, { 
-      title: '', 
-      description: '', 
-      youtubeUrl: '',
-      content: '', 
-      lessons: [] 
-    }]);
-  };
-  
-  const removeModule = (index) => {
-    const updatedModules = [...modules];
-    updatedModules.splice(index, 1);
-    setModules(updatedModules);
-  };
-
-  // Handlers for assignments
-  const handleAssignmentChange = (index, field, value) => {
-    const updatedAssignments = [...assignments];
-    updatedAssignments[index][field] = value;
-    setAssignments(updatedAssignments);
-  };
-  
-  const addAssignment = () => {
-    setAssignments([...assignments, { title: '', description: '', dueDate: '' }]);
-  };
-  
-  const removeAssignment = (index) => {
-    const updatedAssignments = [...assignments];
-    updatedAssignments.splice(index, 1);
-    setAssignments(updatedAssignments);
-  };
-
-  const onSubmit = (data) => {
+  const handleSubmit = (courseData) => {
     try {
-      // Validate YouTube URLs
-      const invalidYoutubeUrls = modules
-        .filter(module => module.youtubeUrl && !isValidYoutubeUrl(module.youtubeUrl));
-      
-      if (invalidYoutubeUrls.length > 0) {
-        toast({
-          title: "Invalid YouTube URL",
-          description: "Please enter valid YouTube URLs for all modules.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
-      // Filter out empty modules and assignments
-      const filteredModules = modules.filter(module => module.title.trim() !== '');
-      const filteredAssignments = assignments.filter(assignment => assignment.title.trim() !== '');
-      
-      const newCourse = {
-        ...data,
-        discountPrice: data.discountPrice || null,
-        modules: filteredModules,
-        assignments: filteredAssignments
-      };
-      
-      const createdCourse = createCourse(newCourse);
+      const createdCourse = createCourse(courseData);
       
       toast({
         title: "Success",
@@ -158,6 +36,10 @@ const AdminCourseCreatePage = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleCancel = () => {
+    navigate('/admin-dashboard/courses');
   };
 
   return (
@@ -176,185 +58,10 @@ const AdminCourseCreatePage = () => {
               </CardHeader>
               
               <CardContent>
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <div className="space-y-4">
-                      {/* Basic course information */}
-                      <FormField
-                        control={form.control}
-                        name="title"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Course Title</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="description"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Description</FormLabel>
-                            <FormControl>
-                              <Textarea {...field} rows={5} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="coverImage"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Cover Image URL</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={form.control}
-                          name="price"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Price ($)</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  {...field}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="discountPrice"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Discount Price ($)</FormLabel>
-                              <FormControl>
-                                <Input
-                                  type="number"
-                                  min="0"
-                                  step="0.01"
-                                  {...field}
-                                  value={field.value || ''}
-                                  onChange={(e) => {
-                                    const value = e.target.value === '' ? '' : Number(e.target.value);
-                                    field.onChange(value);
-                                  }}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <FormField
-                        control={form.control}
-                        name="category"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Category</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="level"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Level</FormLabel>
-                            <FormControl>
-                              <select
-                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                                {...field}
-                              >
-                                <option value="beginner">Beginner</option>
-                                <option value="intermediate">Intermediate</option>
-                                <option value="advanced">Advanced</option>
-                              </select>
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="isPublished"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 mt-4">
-                            <FormControl>
-                              <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                              />
-                            </FormControl>
-                            <div className="space-y-1 leading-none">
-                              <FormLabel>
-                                Publish this course
-                              </FormLabel>
-                            </div>
-                          </FormItem>
-                        )}
-                      />
-                      
-                      {/* Course Modules Section */}
-                      <div className="mt-8">
-                        <CourseModulesSection
-                          modules={modules}
-                          handleModuleChange={handleModuleChange}
-                          addModule={addModule}
-                          removeModule={removeModule}
-                        />
-                      </div>
-                      
-                      {/* Course Assignments Section */}
-                      <div className="mt-8">
-                        <CourseAssignmentsSection
-                          assignments={assignments}
-                          handleAssignmentChange={handleAssignmentChange}
-                          addAssignment={addAssignment}
-                          removeAssignment={removeAssignment}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="flex justify-end space-x-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => navigate('/admin-dashboard/courses')}
-                      >
-                        Cancel
-                      </Button>
-                      <Button type="submit">Create Course</Button>
-                    </div>
-                  </form>
-                </Form>
+                <AdminCourseForm 
+                  onSubmit={handleSubmit}
+                  onCancel={handleCancel}
+                />
               </CardContent>
             </Card>
           </div>
