@@ -13,16 +13,6 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { 
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogPortal
-} from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -38,6 +28,7 @@ import {
   Trash2,
   Mail
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const InvitationsPage = () => {
   const { user } = useAuth();
@@ -45,13 +36,8 @@ const InvitationsPage = () => {
   const [activeTab, setActiveTab] = useState("pending");
   const [invitations, setInvitations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showNewInviteDialog, setShowNewInviteDialog] = useState(false);
-  const [formData, setFormData] = useState({
-    email: "",
-    firstName: "",
-    lastName: ""
-  });
   const [processingAction, setProcessingAction] = useState(false);
+  const navigate = useNavigate();
   
   useEffect(() => {
     fetchInvitations();
@@ -80,52 +66,6 @@ const InvitationsPage = () => {
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleSendInvitation = async () => {
-    if (!formData.email || !formData.firstName || !formData.lastName) {
-      toast({
-        title: "Missing Fields",
-        description: "Please fill in all required fields.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setProcessingAction(true);
-    try {
-      console.log("Sending invitation to:", formData);
-      // Use the helper function from supabase.js
-      await sendInstructorInvitation(
-        formData.email,
-        formData.firstName,
-        formData.lastName
-      );
-      
-      toast({
-        title: "Invitation Sent",
-        description: `Invitation sent to ${formData.email}`,
-      });
-      
-      // Reset form and refresh list
-      setFormData({ email: "", firstName: "", lastName: "" });
-      setShowNewInviteDialog(false);
-      fetchInvitations();
-    } catch (error) {
-      console.error("Error sending invitation:", error);
-      toast({
-        title: "Failed to Send Invitation",
-        description: error.message || "An unexpected error occurred.",
-        variant: "destructive"
-      });
-    } finally {
-      setProcessingAction(false);
     }
   };
 
@@ -229,104 +169,10 @@ const InvitationsPage = () => {
             <div className="flex justify-between items-center mb-8">
               <h1 className="text-3xl font-bold">Instructor Invitations</h1>
               
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Send New Invitation
-                  </Button>
-                </DialogTrigger>
-                <DialogPortal>
-                  <DialogContent className="sm:max-w-[525px]">
-                    <DialogHeader>
-                      <DialogTitle>Send Instructor Invitation</DialogTitle>
-                      <DialogDescription>
-                        Send an invitation to a new instructor. They will receive an email with login instructions.
-                      </DialogDescription>
-                    </DialogHeader>
-                    
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                        <label htmlFor="email" className="text-sm font-medium">
-                          Email Address*
-                        </label>
-                        <Input
-                          id="email"
-                          name="email"
-                          type="email"
-                          value={formData.email}
-                          onChange={handleInputChange}
-                          placeholder="instructor@example.com"
-                          required
-                        />
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <label htmlFor="firstName" className="text-sm font-medium">
-                            First Name*
-                          </label>
-                          <Input
-                            id="firstName"
-                            name="firstName"
-                            value={formData.firstName}
-                            onChange={handleInputChange}
-                            placeholder="John"
-                            required
-                          />
-                        </div>
-                        
-                        <div className="space-y-2">
-                          <label htmlFor="lastName" className="text-sm font-medium">
-                            Last Name*
-                          </label>
-                          <Input
-                            id="lastName"
-                            name="lastName"
-                            value={formData.lastName}
-                            onChange={handleInputChange}
-                            placeholder="Doe"
-                            required
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="bg-blue-50 p-4 rounded-md text-sm">
-                        <p className="text-blue-700 flex items-start">
-                          <AlertCircle className="h-5 w-5 mr-2 flex-shrink-0 mt-0.5" />
-                          <span>
-                            The invited instructor will receive an email with a link to set up their account. 
-                            A temporary password will be generated and included in the email. The invitation will expire in 7 days.
-                          </span>
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setShowNewInviteDialog(false)}>
-                        Cancel
-                      </Button>
-                      <Button 
-                        type="button"
-                        onClick={handleSendInvitation}
-                        disabled={processingAction}
-                      >
-                        {processingAction ? (
-                          <>
-                            <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                            Sending...
-                          </>
-                        ) : (
-                          <>
-                            <Send className="mr-2 h-4 w-4" />
-                            Send Invitation
-                          </>
-                        )}
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </DialogPortal>
-              </Dialog>
+              <Button onClick={() => navigate('/new-invitation')}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Send New Invitation
+              </Button>
             </div>
             
             <Tabs 
@@ -385,7 +231,8 @@ const InvitationsPage = () => {
                         <TableRow>
                           <TableHead>Email</TableHead>
                           <TableHead>Name</TableHead>
-                          <TableHead>Sent Date</TableHead>
+                          <TableHead>Created</TableHead>
+                          {activeTab === 'accepted' && <TableHead>Accepted</TableHead>}
                           <TableHead>Expires</TableHead>
                           <TableHead>Invited By</TableHead>
                           {activeTab === 'pending' && <TableHead className="text-right">Actions</TableHead>}
@@ -403,6 +250,11 @@ const InvitationsPage = () => {
                             <TableCell>
                               {formatDateTime(invitation.created_at)}
                             </TableCell>
+                            {activeTab === 'accepted' && (
+                              <TableCell>
+                                {formatDateTime(invitation.accepted_at)}
+                              </TableCell>
+                            )}
                             <TableCell>
                               {formatDateTime(invitation.expires_at)}
                             </TableCell>
@@ -454,4 +306,4 @@ const InvitationsPage = () => {
   );
 };
 
-export default InvitationsPage; 
+export default InvitationsPage;

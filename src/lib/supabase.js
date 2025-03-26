@@ -173,27 +173,14 @@ export const processRoleChangeRequest = async (requestId, approve, reason) => {
 };
 
 // Invitation management functions
+import { invitationEmailTemplate } from '@/utils/emailTemplates';
+
 export const sendInstructorInvitation = async (email, firstName, lastName) => {
   const currentUser = (await supabase.auth.getUser()).data.user;
-  
-  // Generate random password and token
-  const generatePassword = () => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*";
-    let password = "";
-    for (let i = 0; i < 12; i++) {
-      password += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return password;
-  };
-  
-  const tempPassword = generatePassword();
   const token = crypto.randomUUID();
+  const tempPassword = generatePassword();
+  const expiresAt = addDays(new Date(), 7);
   
-  // Calculate expiration date (7 days from now)
-  const expiresAt = new Date();
-  expiresAt.setDate(expiresAt.getDate() + 7);
-  
-  // Insert invitation record
   const { data, error } = await supabase
     .from('user_invitations')
     .insert({
@@ -205,15 +192,15 @@ export const sendInstructorInvitation = async (email, firstName, lastName) => {
       token,
       temp_password: tempPassword,
       expires_at: expiresAt.toISOString(),
-      status: 'pending'
-    })
-    .select()
-    .single();
-    
+      status: 'pending',
+      created_at: new Date().toISOString(), // Add created_at
+    });
+
   if (error) throw error;
   
   // Prepare email parameters for Supabase Auth email sending
   const inviteUrl = `${window.location.origin}/accept-invitation?token=${token}`;
+  const { subject, html } = invitationEmailTemplate(firstName, inviteUrl, tempPassword);
   
   // Using Supabase Auth to send the email
   const { error: emailError } = await supabase.auth.resetPasswordForEmail(
@@ -222,7 +209,9 @@ export const sendInstructorInvitation = async (email, firstName, lastName) => {
       redirectTo: inviteUrl,
       data: {
         invite_token: token,
-        temp_password: tempPassword
+        temp_password: tempPassword,
+        email_subject: subject,
+        email_html: html
       }
     }
   );
@@ -322,29 +311,38 @@ export const validateInvitationToken = async (token) => {
 };
 
 export const acceptInvitation = async (token, password) => {
-  // Get invitation details
-  const invitation = await validateInvitationToken(token);
+  const { data: invitation, error: inviteError } = await supabase
+    .from('user_invitations')
+    .update({
+      status: 'accepted',
+      accepted_at: new Date().toISOString() // Add accepted_at timestamp
+    })
+    .eq('token', token)
+    .select()
+    .single();
+
+  if (inviteError) throw inviteError;
   
-  // Create a new user in Supabase Auth
-  const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+  // Create auth user
+  const { data: authData, error: authError } = await supabase.auth.signUp({
     email: invitation.email,
     password: password,
     options: {
       data: {
+        role: 'instructor', // Explicitly set role in auth metadata
         first_name: invitation.first_name,
-        last_name: invitation.last_name,
-        role: invitation.role
+        last_name: invitation.last_name
       }
     }
   });
   
-  if (signUpError) throw signUpError;
+  if (authError) throw authError;
   
   // Create a profile entry
   const { error: profileError } = await supabase
     .from('profiles')
     .insert({
-      id: signUpData.user.id,
+      id: authData.user.id,
       first_name: invitation.first_name,
       last_name: invitation.last_name,
       email: invitation.email,
@@ -419,4 +417,29 @@ export const checkPermission = async (requiredRole, userId = null) => {
   }
   
   return false;
-}; 
+};
+
+export const validateInstructorSession = async () => {
+  const { data: { session } } = await supabase.auth.getSession();
+  if (!session?.user?.user_metadata?.role === 'instructor') {
+    throw new Error('Unauthorized access');
+  }
+  return session;
+};
+
+export const ensureInstructorRole = async (userId) => {
+  const { error } = await supabase
+    .from('users')
+    .update({ 
+      role: 'instructor',
+      role_verified: true 
+    })
+    .eq('id', userId);
+    
+  if (error) throw error;
+  
+  // Update auth metadata
+  await supabase.auth.admin.updateUserById(userId, {
+    user_metadata: { role: 'instructor' }
+  });
+};

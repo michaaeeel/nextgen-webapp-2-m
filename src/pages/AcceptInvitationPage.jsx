@@ -93,14 +93,14 @@ const AcceptInvitationPage = () => {
       // Use the acceptInvitation helper function
       await acceptInvitation(token, formData.password);
       
-      // Success! Show toast and redirect
-      toast({
-        title: "Account created successfully",
-        description: "You can now sign in with your credentials.",
+      // Sign in the user
+      await supabase.auth.signInWithPassword({
+        email: invitation.email,
+        password: formData.password
       });
       
-      // Redirect to sign in page
-      setTimeout(() => navigate("/signin"), 2000);
+      // Redirect to instructor dashboard
+      navigate('/instructor-dashboard');
     } catch (error) {
       console.error("Error accepting invitation:", error);
       toast({
@@ -234,4 +234,4 @@ const AcceptInvitationPage = () => {
   );
 };
 
-export default AcceptInvitationPage; 
+export default AcceptInvitationPage;
