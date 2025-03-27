@@ -1,4 +1,6 @@
 import { createClient } from '@supabase/supabase-js'
+import { generatePassword } from '@/utils/passwords';
+import { addDays } from '@/utils/dateUtils';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -179,7 +181,7 @@ export const sendInstructorInvitation = async (email, firstName, lastName) => {
   const currentUser = (await supabase.auth.getUser()).data.user;
   const token = crypto.randomUUID();
   const tempPassword = generatePassword();
-  const expiresAt = addDays(new Date(), 7);
+  const expiresAt = addDays(new Date(), 7); // Now properly defined
   
   const { data, error } = await supabase
     .from('user_invitations')
