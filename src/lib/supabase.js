@@ -175,14 +175,17 @@ export const processRoleChangeRequest = async (requestId, approve, reason) => {
 };
 
 // Invitation management functions
-import { invitationEmailTemplate } from '@/utils/emailTemplates';
+import { supabase } from '@/lib/supabase';
+import { generatePassword } from '@/utils/passwords';
+import { addDays } from '@/utils/dateUtils';
 
 export const sendInstructorInvitation = async (email, firstName, lastName) => {
   const currentUser = (await supabase.auth.getUser()).data.user;
   const token = crypto.randomUUID();
   const tempPassword = generatePassword();
-  const expiresAt = addDays(new Date(), 7); // Now properly defined
-  
+  const expiresAt = addDays(new Date(), 7);
+
+  // Step 1: Create an entry in the user_invitations table
   const { data, error } = await supabase
     .from('user_invitations')
     .insert({
@@ -195,31 +198,26 @@ export const sendInstructorInvitation = async (email, firstName, lastName) => {
       temp_password: tempPassword,
       expires_at: expiresAt.toISOString(),
       status: 'pending',
-      created_at: new Date().toISOString(), // Add created_at
-    });
+      created_at: new Date().toISOString(),
+    })
+    .select()
+    .single();
 
   if (error) throw error;
-  
-  // Prepare email parameters for Supabase Auth email sending
-  const inviteUrl = `${window.location.origin}/accept-invitation?token=${token}`;
-  const { subject, html } = invitationEmailTemplate(firstName, inviteUrl, tempPassword);
-  
-  // Using Supabase Auth to send the email
-  const { error: emailError } = await supabase.auth.resetPasswordForEmail(
-    email,
-    {
-      redirectTo: inviteUrl,
-      data: {
-        invite_token: token,
-        temp_password: tempPassword,
-        email_subject: subject,
-        email_html: html
-      }
-    }
-  );
-  
-  if (emailError) throw emailError;
-  
+
+  // Step 2: Send the invite email using Supabase's "Invite user" email template
+  const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
+    redirectTo: `${window.location.origin}/accept-invitation?token=${token}`,
+    data: {
+      temp_password: tempPassword,
+      role: 'instructor',
+      first_name: firstName,
+      last_name: lastName,
+    },
+  });
+
+  if (inviteError) throw inviteError;
+
   return { success: true, invitation: data };
 };
 
