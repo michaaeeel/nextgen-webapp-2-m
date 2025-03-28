@@ -319,50 +319,71 @@ export const validateInvitationToken = async (token) => {
 };
 
 export const acceptInvitation = async (token, password) => {
-  // First update
-  const { data: invitation, error: inviteError } = await supabase
-    .from('user_invitations')
-    .update({
-      status: 'accepted',
-      accepted_at: new Date().toISOString()
-    })
-    .eq('token', token)
-    .select()
-    .single();
+  try {
+    // 1. First validate and get invitation
+    const { data: invitation, error: fetchError } = await supabase
+      .from('user_invitations')
+      .select('*')
+      .eq('token', token)
+      .single();
 
-  if (inviteError) throw inviteError;
-  
-  // Create auth user
-  const { data: authData, error: authError } = await supabase.auth.signUp({
-    email: invitation.email,
-    password: password,
-    options: {
-      data: {
-        role: 'instructor', // Explicitly set role in auth metadata
+    if (fetchError) throw fetchError;
+
+    // 2. Create auth user with admin client
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+      email: invitation.email,
+      password: password,
+      email_confirm: true, // Auto-confirm email
+      user_metadata: {
+        role: 'instructor',
         first_name: invitation.first_name,
         last_name: invitation.last_name
       }
-    }
-  });
-  
-  if (authError) throw authError;
-  
-  // Create a profile entry
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .insert({
-      id: authData.user.id,
-      first_name: invitation.first_name,
-      last_name: invitation.last_name,
-      email: invitation.email,
-      role: invitation.role,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
     });
-    
-  if (profileError) throw profileError;
-  
-  return { success: true };
+
+    if (authError) throw authError;
+
+    // 3. Wait for auth session to be established
+    const { data: { session }, error: sessionError } = await supabase.auth.signInWithPassword({
+      email: invitation.email,
+      password: password,
+    });
+
+    if (sessionError) throw sessionError;
+
+    // 4. Create profile entry
+    const { error: profileError } = await supabaseAdmin
+      .from('profiles')
+      .insert({
+        id: authData.user.id,
+        first_name: invitation.first_name,
+        last_name: invitation.last_name,
+        email: invitation.email,
+        role: 'instructor',
+        role_verified: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+
+    if (profileError) throw profileError;
+
+    // 5. Update invitation status last
+    const { error: updateError } = await supabase
+      .from('user_invitations')
+      .update({
+        status: 'accepted',
+        accepted_at: new Date().toISOString(),
+        user_id: authData.user.id
+      })
+      .eq('id', invitation.id);
+
+    if (updateError) throw updateError;
+
+    return { success: true, session };
+  } catch (error) {
+    console.error('Error in acceptInvitation:', error);
+    throw error;
+  }
 };
 
 export const inviteUser = async (email, role) => {

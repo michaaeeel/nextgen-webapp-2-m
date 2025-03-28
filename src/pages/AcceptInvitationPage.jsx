@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase, validateInvitationToken, acceptInvitation } from "@/lib/supabase";
+import { supabase, validateInvitationToken } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -86,25 +86,39 @@ const AcceptInvitationPage = () => {
     setProcessingAction(true);
     
     try {
+      // Update password for existing user
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: formData.password
+      });
+
+      if (updateError) throw updateError;
+
       // Get token from URL
       const params = new URLSearchParams(location.search);
       const token = params.get("token");
       
-      // Use the acceptInvitation helper function
-      await acceptInvitation(token, formData.password);
+      // Update invitation status
+      const { error: inviteError } = await supabase
+        .from('user_invitations')
+        .update({
+          status: 'accepted',
+          accepted_at: new Date().toISOString()
+        })
+        .eq('token', token);
+
+      if (inviteError) throw inviteError;
       
-      // Sign in the user
-      await supabase.auth.signInWithPassword({
-        email: invitation.email,
-        password: formData.password
+      toast({
+        title: "Success!",
+        description: "Your password has been set successfully.",
       });
-      
+
       // Redirect to instructor dashboard
       navigate('/instructor-dashboard');
     } catch (error) {
-      console.error("Error accepting invitation:", error);
+      console.error("Error updating password:", error);
       toast({
-        title: "Error creating account",
+        title: "Error updating password",
         description: error.message || "An unexpected error occurred.",
         variant: "destructive"
       });
@@ -221,10 +235,10 @@ const AcceptInvitationPage = () => {
               {processingAction ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Account...
+                  Setting Password...
                 </>
               ) : (
-                "Create Account & Sign In"
+                "Set Password & Continue"
               )}
             </Button>
           </form>

@@ -1,8 +1,30 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { checkPermission, getUserRole } from '@/lib/supabase';
+import { checkPermission } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 const RBACContext = createContext(null);
+
+export const getUserRole = async (userId) => {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', userId || (await supabase.auth.getUser()).data.user?.id)
+      .single();
+    
+    if (error) {
+      // If profile doesn't exist yet, fall back to auth metadata
+      const { data: { user } } = await supabase.auth.getUser();
+      return user?.user_metadata?.role || 'student';
+    }
+    
+    return data.role;
+  } catch (error) {
+    console.error('Error getting user role:', error);
+    return 'student'; // Safe fallback
+  }
+};
 
 export function RBACProvider({ children }) {
   const { user, isAuthenticated } = useAuth();
