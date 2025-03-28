@@ -1,15 +1,22 @@
 import { createClient } from '@supabase/supabase-js'
 import { generatePassword } from '@/utils/passwords';
 import { addDays } from '@/utils/dateUtils';
+import crypto from 'crypto'; // Add this for crypto.randomUUID()
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const supabaseServiceKey = import.meta.env.VITE_SUPABASE_SERVICE_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables')
-}
-
+// Regular client for normal operations
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+// Admin client for privileged operations
+export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+  auth: {
+    autoRefreshToken: false,
+    persistSession: false
+  }
+})
 
 // Auth helper functions
 export const signUp = async ({ email, password, ...metadata }) => {
@@ -30,7 +37,7 @@ export const signIn = async ({ email, password }) => {
     password,
   })
   if (error) throw error
-  return data
+  return data  // Add missing return
 }
 
 export const signOut = async () => {
@@ -175,51 +182,52 @@ export const processRoleChangeRequest = async (requestId, approve, reason) => {
 };
 
 // Invitation management functions
-import { supabase } from '@/lib/supabase';
-import { generatePassword } from '@/utils/passwords';
-import { addDays } from '@/utils/dateUtils';
+export async function sendInstructorInvitation(email, firstName, lastName) {
+  try {
+    const inviteId = self.crypto.randomUUID();
+    const currentUser = (await supabase.auth.getUser()).data.user;
+    const tempPassword = generatePassword();
+    const expiresAt = addDays(new Date(), 7);
 
-export const sendInstructorInvitation = async (email, firstName, lastName) => {
-  const currentUser = (await supabase.auth.getUser()).data.user;
-  const token = crypto.randomUUID();
-  const tempPassword = generatePassword();
-  const expiresAt = addDays(new Date(), 7);
+    // Step 1: Create an entry in user_invitations (using regular client)
+    const { data, error } = await supabase
+      .from('user_invitations')
+      .insert({
+        email,
+        first_name: firstName,
+        last_name: lastName,
+        role: 'instructor',
+        invited_by: currentUser.id,
+        token: inviteId,
+        temp_password: tempPassword,
+        expires_at: expiresAt.toISOString(),
+        status: 'pending',
+        created_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
 
-  // Step 1: Create an entry in the user_invitations table
-  const { data, error } = await supabase
-    .from('user_invitations')
-    .insert({
-      email,
-      first_name: firstName,
-      last_name: lastName,
-      role: 'instructor',
-      invited_by: currentUser.id,
-      token,
-      temp_password: tempPassword,
-      expires_at: expiresAt.toISOString(),
-      status: 'pending',
-      created_at: new Date().toISOString(),
-    })
-    .select()
-    .single();
+    if (error) throw error;
 
-  if (error) throw error;
+    // Step 2: Send invite email using admin client
+    const { error: inviteError } = await supabaseAdmin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${window.location.origin}/accept-invitation?token=${inviteId}`,
+      data: {
+        temp_password: tempPassword,
+        role: 'instructor',
+        first_name: firstName,
+        last_name: lastName,
+      },
+    });
 
-  // Step 2: Send the invite email using Supabase's "Invite user" email template
-  const { error: inviteError } = await supabase.auth.admin.inviteUserByEmail(email, {
-    redirectTo: `${window.location.origin}/accept-invitation?token=${token}`,
-    data: {
-      temp_password: tempPassword,
-      role: 'instructor',
-      first_name: firstName,
-      last_name: lastName,
-    },
-  });
+    if (inviteError) throw inviteError;
 
-  if (inviteError) throw inviteError;
-
-  return { success: true, invitation: data };
-};
+    return { success: true, invitation: data };
+  } catch (error) {
+    console.error('Error in sendInstructorInvitation:', error);
+    throw error;
+  }
+}
 
 export const resendInvitation = async (invitationId) => {
   // Get the invitation details
@@ -311,11 +319,12 @@ export const validateInvitationToken = async (token) => {
 };
 
 export const acceptInvitation = async (token, password) => {
+  // First update
   const { data: invitation, error: inviteError } = await supabase
     .from('user_invitations')
     .update({
       status: 'accepted',
-      accepted_at: new Date().toISOString() // Add accepted_at timestamp
+      accepted_at: new Date().toISOString()
     })
     .eq('token', token)
     .select()
@@ -353,22 +362,13 @@ export const acceptInvitation = async (token, password) => {
     
   if (profileError) throw profileError;
   
-  // Update invitation status to accepted
-  const { error: updateError } = await supabase
-    .from('user_invitations')
-    .update({
-      status: 'accepted',
-      accepted_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', invitation.id);
-    
-  if (updateError) throw updateError;
-  
   return { success: true };
 };
 
 export const inviteUser = async (email, role) => {
+  if (!email || !role) {
+    throw new Error('Email and role are required');
+  }
   // Generate a unique token
   const token = crypto.randomUUID();
   const expires = new Date();
@@ -401,6 +401,7 @@ export const getUserRole = async (userId) => {
     .single();
     
   if (error) throw error;
+  if (!data) throw new Error('User profile not found');
   return data.role;
 };
 
@@ -421,7 +422,7 @@ export const checkPermission = async (requiredRole, userId = null) => {
 
 export const validateInstructorSession = async () => {
   const { data: { session } } = await supabase.auth.getSession();
-  if (!session?.user?.user_metadata?.role === 'instructor') {
+  if (session?.user?.user_metadata?.role !== 'instructor') {
     throw new Error('Unauthorized access');
   }
   return session;
@@ -429,7 +430,7 @@ export const validateInstructorSession = async () => {
 
 export const ensureInstructorRole = async (userId) => {
   const { error } = await supabase
-    .from('users')
+    .from('profiles')  // Should be 'profiles' table
     .update({ 
       role: 'instructor',
       role_verified: true 
