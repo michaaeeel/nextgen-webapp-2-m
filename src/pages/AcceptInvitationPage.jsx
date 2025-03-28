@@ -62,6 +62,8 @@ const AcceptInvitationPage = () => {
   
   const handleAcceptInvitation = async (e) => {
     e.preventDefault();
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
     
     // Validate password match
     if (formData.password !== formData.confirmPassword) {
@@ -86,39 +88,59 @@ const AcceptInvitationPage = () => {
     setProcessingAction(true);
     
     try {
-      // Update password for existing user
-      const { error: updateError } = await supabase.auth.updateUser({
+      // 1. Update password for existing user
+      const { data: { user }, error: updateError } = await supabase.auth.updateUser({
         password: formData.password
       });
 
       if (updateError) throw updateError;
 
-      // Get token from URL
-      const params = new URLSearchParams(location.search);
-      const token = params.get("token");
+      // 2. Create profile entry
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          first_name: invitation.first_name,
+          last_name: invitation.last_name,
+          email: invitation.email,
+          role: 'instructor',
+          role_verified: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (profileError) throw profileError;
+
+      // 3. Update invitation status
+      console.log('Updating invitation:', invitation);
       
-      // Update invitation status
-      const { error: inviteError } = await supabase
+      const { data: inviteData, error: inviteError } = await supabase
         .from('user_invitations')
         .update({
           status: 'accepted',
           accepted_at: new Date().toISOString()
         })
-        .eq('token', token);
+        .eq('email', invitation.email)
+        .select();
 
-      if (inviteError) throw inviteError;
+      console.log('Update result:', inviteData);
+      
+      if (inviteError) {
+        console.error('Invitation update error:', inviteError);
+        throw inviteError;
+      }
       
       toast({
         title: "Success!",
-        description: "Your password has been set successfully.",
+        description: "Your account has been set up successfully.",
       });
 
       // Redirect to instructor dashboard
       navigate('/instructor-dashboard');
     } catch (error) {
-      console.error("Error updating password:", error);
+      console.error("Error accepting invitation:", error);
       toast({
-        title: "Error updating password",
+        title: "Error Setting Up Account",
         description: error.message || "An unexpected error occurred.",
         variant: "destructive"
       });
