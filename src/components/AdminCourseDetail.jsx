@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCourses } from "@/contexts/CourseContext";
@@ -133,8 +134,8 @@ const AdminCourseDetail = ({ course, onEdit, onDelete }) => {
                       <h4 className="text-sm font-medium flex items-center gap-2 mb-2">
                         <FileText className="h-4 w-4" /> Text Content
                       </h4>
-                      <div className="p-4 bg-gray-50 rounded-md">
-                        <p className="whitespace-pre-wrap">{module.content}</p>
+                      <div className="p-4 bg-secondary rounded-md">
+                        <p className="whitespace-pre-wrap text-foreground">{module.content}</p>
                       </div>
                     </div>
                   )}
