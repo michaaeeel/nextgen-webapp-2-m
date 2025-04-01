@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 
 // Get all courses

@@ -1,7 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { checkPermission } from '@/lib/supabase';
-import { supabase } from '@/lib/supabase';
+import { checkPermission, supabase } from '@/lib/supabase';
 
 const RBACContext = createContext(null);
 

@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 
 // Enroll a student in a course
