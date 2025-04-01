@@ -26,7 +26,6 @@ const AcceptInvitationPage = () => {
   useEffect(() => {
     const validateToken = async () => {
       try {
-        // Get token from URL query parameter
         const params = new URLSearchParams(location.search);
         const token = params.get("token");
         
@@ -36,10 +35,8 @@ const AcceptInvitationPage = () => {
           return;
         }
         
-        // Use the validateInvitationToken helper function
         const invitationData = await validateInvitationToken(token);
         
-        // If we get here, the token is valid
         setInvitation(invitationData);
         setTokenValid(true);
       } catch (error) {
@@ -65,7 +62,6 @@ const AcceptInvitationPage = () => {
     const params = new URLSearchParams(location.search);
     const token = params.get("token");
     
-    // Validate password match
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Passwords do not match",
@@ -75,7 +71,6 @@ const AcceptInvitationPage = () => {
       return;
     }
     
-    // Validate password strength (minimum 8 characters)
     if (formData.password.length < 8) {
       toast({
         title: "Password too short",
@@ -88,14 +83,12 @@ const AcceptInvitationPage = () => {
     setProcessingAction(true);
     
     try {
-      // 1. Update password for existing user
       const { data: { user }, error: updateError } = await supabase.auth.updateUser({
         password: formData.password
       });
 
       if (updateError) throw updateError;
 
-      // 2. Create profile entry
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -111,7 +104,6 @@ const AcceptInvitationPage = () => {
 
       if (profileError) throw profileError;
 
-      // 3. Update invitation status
       console.log('Updating invitation:', invitation);
       
       const { data: inviteData, error: inviteError } = await supabase
@@ -135,7 +127,6 @@ const AcceptInvitationPage = () => {
         description: "Your account has been set up successfully.",
       });
 
-      // Redirect to instructor dashboard
       navigate('/instructor-dashboard');
     } catch (error) {
       console.error("Error accepting invitation:", error);
