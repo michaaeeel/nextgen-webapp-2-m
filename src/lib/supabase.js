@@ -37,7 +37,7 @@ export const signIn = async ({ email, password }) => {
     password,
   })
   if (error) throw error
-  return data  // Add missing return
+  return data
 }
 
 export const signOut = async () => {
