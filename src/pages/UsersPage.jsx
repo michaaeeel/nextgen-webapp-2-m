@@ -55,11 +55,6 @@ const UsersPage = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
   const [newRole, setNewRole] = useState("");
-  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
-  const [inviteData, setInviteData] = useState({
-    email: "",
-    role: "student"
-  });
 
   useEffect(() => {
     fetchUsers();
@@ -147,45 +142,6 @@ const UsersPage = () => {
     }
   };
 
-  const handleInviteUser = async () => {
-    if (!inviteData.email || !inviteData.role) return;
-    
-    try {
-      // Generate a unique token
-      const token = crypto.randomUUID();
-      const expires = new Date();
-      expires.setDate(expires.getDate() + 7); // 7-day expiration
-      
-      await supabase
-        .from('user_invitations')
-        .insert({
-          email: inviteData.email,
-          role: inviteData.role,
-          invited_by: user.id,
-          token,
-          expires_at: expires.toISOString()
-        });
-      
-      // Here you would normally send an email with the invitation link
-      // For now, we'll just show a success message with the token
-      
-      toast({
-        title: "Invitation Sent",
-        description: `Invitation has been created for ${inviteData.email}. Token: ${token}`,
-      });
-      
-      setInviteData({ email: "", role: "student" });
-      setInviteDialogOpen(false);
-    } catch (error) {
-      console.error("Error inviting user:", error);
-      toast({
-        title: "Invitation Failed",
-        description: error.message || "Failed to create invitation.",
-        variant: "destructive"
-      });
-    }
-  };
-
   const filteredUsers = users.filter(user => {
     const searchLower = searchTerm.toLowerCase();
     const firstName = user.first_name?.toLowerCase() || '';
@@ -220,7 +176,7 @@ const UsersPage = () => {
                 </div>
                 
                 {permissions.canInviteUsers && (
-                  <Button onClick={() => setInviteDialogOpen(true)}>
+                  <Button onClick={() => navigate('/new-invitation')}>
                     <UserPlus className="mr-2 h-4 w-4" />
                     Invite User
                   </Button>
@@ -333,62 +289,6 @@ const UsersPage = () => {
               Cancel
             </Button>
             <Button onClick={handleRoleChange}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      {/* Invite User Dialog */}
-      <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Invite New User</DialogTitle>
-            <DialogDescription>
-              Send an invitation to a new user. They will receive instructions to create an account.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium">
-                Email Address
-              </label>
-              <Input
-                id="email"
-                type="email"
-                value={inviteData.email}
-                onChange={e => setInviteData({...inviteData, email: e.target.value})}
-                placeholder="user@example.com"
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <label htmlFor="invite-role" className="text-sm font-medium">
-                Role
-              </label>
-              <Select 
-                value={inviteData.role} 
-                onValueChange={value => setInviteData({...inviteData, role: value})}
-              >
-                <SelectTrigger id="invite-role">
-                  <SelectValue placeholder="Select role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="student">Student</SelectItem>
-                  <SelectItem value="instructor">Instructor</SelectItem>
-                  <SelectItem value="admin">Administrator</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleInviteUser}>
-              Send Invitation
-            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -59,7 +59,7 @@ const AdminCourseAssignInstructorPage = () => {
     
     // Get all instructors
     const users = getAllUsers();
-    const instructorUsers = users.filter(user => user.role === 'instructor');
+    const instructorUsers = users.filter(user => user.role === 'admin');
     setInstructors(instructorUsers);
   }, [course, getAllUsers]);
 
