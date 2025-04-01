@@ -35,6 +35,7 @@ const AdminCourseCreatePage = () => {
         assignments: data.assignments
       };
       
+      // Instructor will be automatically set in the service
       const createdCourse = await createCourse(courseData);
       
       toast({

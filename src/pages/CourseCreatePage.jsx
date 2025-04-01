@@ -42,14 +42,13 @@ const CourseCreatePage = () => {
     const newCourse = {
       title: courseData.title,
       description: courseData.description,
-      instructor_id: user.id,
-      instructor_name: courseData.instructorName || user.name,
       modules: courseData.modules,
       assignments: courseData.assignments,
       enrolled_students: [],
       is_published: false
     };
     
+    // Instructor will be automatically set in the service
     createCourseMutation.mutate(newCourse);
   };
 

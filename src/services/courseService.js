@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 
 // Get all courses
@@ -35,13 +36,33 @@ export const fetchCoursesByInstructor = async (instructorId) => {
 
 // Create a new course
 export const createCourse = async (courseData) => {
+  // Get current user info to set as instructor
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  // Get user profile to get name information
+  const { data: userProfile } = await supabase
+    .from('profiles')
+    .select('first_name, last_name')
+    .eq('id', user.id)
+    .single();
+  
+  // Create instructor name from user profile
+  const instructorName = userProfile 
+    ? `${userProfile.first_name} ${userProfile.last_name}`
+    : user.email;
+
+  // Update course data with instructor information
+  const courseWithInstructor = {
+    ...courseData,
+    instructor_id: user.id,
+    instructor_name: instructorName,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+  };
+
   const { data, error } = await supabase
     .from('courses')
-    .insert({
-      ...courseData,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
+    .insert(courseWithInstructor)
     .select()
     .single();
     
