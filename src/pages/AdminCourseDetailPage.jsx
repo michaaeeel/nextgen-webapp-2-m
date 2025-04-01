@@ -51,10 +51,6 @@ const AdminCourseDetailPage = () => {
     }
   };
 
-  const handleAssignInstructor = () => {
-    navigate(`/admin-dashboard/courses/${courseId}/assign-instructor`);
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background">
@@ -121,7 +117,6 @@ const AdminCourseDetailPage = () => {
               course={formattedCourse} 
               onEdit={handleEdit} 
               onDelete={handleDelete}
-              onAssignInstructor={handleAssignInstructor}
             />
           </div>
         </div>

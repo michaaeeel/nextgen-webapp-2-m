@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -10,8 +11,7 @@ const CourseList = ({
   courses, 
   onView, 
   onEdit, 
-  onDelete, 
-  onAssignInstructor,
+  onDelete,
   isAdmin = false,
   createUrl = '/instructor-dashboard/courses/new'
 }) => {
@@ -19,6 +19,12 @@ const CourseList = ({
 
   const handleCreateCourse = () => {
     navigate(createUrl);
+  };
+
+  // Helper function to extract first name from instructor name
+  const getInstructorFirstName = (fullName) => {
+    if (!fullName) return "";
+    return fullName.split(' ')[0];
   };
 
   return (
@@ -59,7 +65,7 @@ const CourseList = ({
                   <CardTitle className="text-xl font-semibold line-clamp-1">{course.title}</CardTitle>
                   {isAdmin && course.instructorName && (
                     <p className="text-sm text-muted-foreground">
-                      Instructor: {course.instructorName}
+                      Instructor: {getInstructorFirstName(course.instructorName)}
                     </p>
                   )}
                 </div>
@@ -68,7 +74,6 @@ const CourseList = ({
                   onView={onView}
                   onEdit={onEdit}
                   onDelete={onDelete}
-                  onAssignInstructor={onAssignInstructor}
                   isAdmin={isAdmin}
                 />
               </CardHeader>

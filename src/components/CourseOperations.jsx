@@ -7,14 +7,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from '@/components/ui/button';
-import { MoreHorizontal, Eye, Pencil, Trash, UserCheck } from 'lucide-react';
+import { MoreHorizontal, Eye, Pencil, Trash } from 'lucide-react';
 
 const CourseOperations = ({ 
   courseId, 
   onView,
   onEdit, 
-  onDelete, 
-  onAssignInstructor,
+  onDelete,
   isAdmin = false
 }) => {
   return (
@@ -38,12 +37,6 @@ const CourseOperations = ({
           <Trash className="mr-2 h-4 w-4" />
           <span>Delete</span>
         </DropdownMenuItem>
-        {isAdmin && (
-          <DropdownMenuItem onClick={() => onAssignInstructor(courseId)} className="cursor-pointer">
-            <UserCheck className="mr-2 h-4 w-4" />
-            <span>Assign Instructor</span>
-          </DropdownMenuItem>
-        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
