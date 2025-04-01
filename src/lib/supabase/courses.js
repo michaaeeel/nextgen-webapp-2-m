@@ -13,7 +13,7 @@ export const createCourse = async (courseData) => {
     .eq('id', user.id)
     .single();
   
-  // Create instructor name from user profile
+  // Create instructor name from user profile - now ensuring both first and last names are used
   const instructorName = userProfile 
     ? `${userProfile.first_name} ${userProfile.last_name}`
     : user.email;

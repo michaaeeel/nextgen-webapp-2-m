@@ -21,12 +21,8 @@ const CourseList = ({
     navigate(createUrl);
   };
 
-  // Helper function to extract first name from instructor name
-  const getInstructorFirstName = (fullName) => {
-    if (!fullName) return "";
-    return fullName.split(' ')[0];
-  };
-
+  // Remove the helper function that extracts first name since we now want to display full name
+  
   return (
     <div className="space-y-6">
       {courses.length === 0 ? (
@@ -65,7 +61,7 @@ const CourseList = ({
                   <CardTitle className="text-xl font-semibold line-clamp-1">{course.title}</CardTitle>
                   {isAdmin && course.instructorName && (
                     <p className="text-sm text-muted-foreground">
-                      Instructor: {getInstructorFirstName(course.instructorName)}
+                      Instructor: {course.instructorName}
                     </p>
                   )}
                 </div>
