@@ -77,8 +77,8 @@ const UsersPage = () => {
           last_name,
           role,
           created_at,
-          auth_user:id (email, last_sign_in_at, created_at, raw_user_meta_data)
-        `)
+          email`
+        )
         .order('created_at', { ascending: false });
 
       if (authError) throw authError;
@@ -188,13 +188,13 @@ const UsersPage = () => {
 
   const filteredUsers = users.filter(user => {
     const searchLower = searchTerm.toLowerCase();
-    const email = user.auth_user?.email?.toLowerCase() || '';
     const firstName = user.first_name?.toLowerCase() || '';
     const lastName = user.last_name?.toLowerCase() || '';
+    const email = user.email?.toLowerCase() || '';  // Add this line
     
-    return email.includes(searchLower) || 
-           firstName.includes(searchLower) || 
+    return firstName.includes(searchLower) || 
            lastName.includes(searchLower) ||
+           email.includes(searchLower) ||  // Add this line
            user.role?.toLowerCase().includes(searchLower);
   });
 
@@ -242,14 +242,13 @@ const UsersPage = () => {
                       <TableHead>Email</TableHead>
                       <TableHead>Role</TableHead>
                       <TableHead>Created</TableHead>
-                      <TableHead>Last Login</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {filteredUsers.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8">
+                        <TableCell colSpan={5} className="text-center py-8">
                           No users found{searchTerm && ` matching "${searchTerm}"`}.
                         </TableCell>
                       </TableRow>
@@ -259,13 +258,13 @@ const UsersPage = () => {
                           <TableCell className="font-medium">
                             {userData.first_name} {userData.last_name}
                           </TableCell>
-                          <TableCell>{userData.auth_user?.email}</TableCell>
+                          <TableCell>{userData.email}</TableCell>
                           <TableCell>
                             <span className={`py-1 px-2 rounded-full text-xs font-medium ${
                               userData.role === 'admin' 
                                 ? 'bg-red-100 text-red-800' 
-                                : userData.role === 'instructor' 
-                                ? 'bg-blue-100 text-blue-800' 
+                                : userData.role === 'instructor'
+                                ? 'bg-blue-100 text-blue-800'
                                 : 'bg-green-100 text-green-800'
                             }`}>
                               {userData.role}
@@ -273,11 +272,6 @@ const UsersPage = () => {
                           </TableCell>
                           <TableCell>
                             {new Date(userData.created_at).toLocaleDateString()}
-                          </TableCell>
-                          <TableCell>
-                            {userData.auth_user?.last_sign_in_at 
-                              ? new Date(userData.auth_user.last_sign_in_at).toLocaleDateString() 
-                              : 'Never'}
                           </TableCell>
                           <TableCell className="text-right">
                             <Button
@@ -404,4 +398,4 @@ const UsersPage = () => {
   );
 };
 
-export default UsersPage; 
+export default UsersPage;
