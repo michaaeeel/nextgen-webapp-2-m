@@ -6,10 +6,9 @@ import { useRBAC } from '@/contexts/RBACContext';
 
 const ProtectedRoute = ({ children, requiredRole }) => {
   const { isAuthenticated, loading: authLoading } = useAuth();
-  const { userRole, loading: rbacLoading } = useRBAC();
   
-  // Show loading indicator while checking auth and role
-  if (authLoading || rbacLoading) {
+  // Show loading indicator while checking auth
+  if (authLoading) {
     return <div className="flex justify-center items-center h-screen">Loading...</div>;
   }
   
@@ -18,33 +17,7 @@ const ProtectedRoute = ({ children, requiredRole }) => {
     return <Navigate to="/signin" />;
   }
   
-  // If no specific role is required, just being authenticated is enough
-  if (!requiredRole) {
-    return children;
-  }
-  
-  // Check if user has the required role
-  let hasAccess = false;
-  
-  if (requiredRole === 'admin') {
-    hasAccess = userRole === 'admin';
-  } else if (requiredRole === 'instructor') {
-    hasAccess = ['admin', 'instructor'].includes(userRole);
-  } else if (requiredRole === 'student') {
-    hasAccess = ['admin', 'instructor', 'student'].includes(userRole);
-  }
-  
-  if (!hasAccess) {
-    // Redirect to appropriate dashboard based on actual role
-    if (userRole === 'admin') {
-      return <Navigate to="/admin-dashboard" />;
-    } else if (userRole === 'instructor') {
-      return <Navigate to="/instructor-dashboard" />;
-    } else {
-      return <Navigate to="/dashboard" />;
-    }
-  }
-  
+  // If authenticated, allow access to all routes regardless of role
   return children;
 };
 
