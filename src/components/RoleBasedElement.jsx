@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useRBAC } from '@/contexts/RBACContext';
 
@@ -7,13 +6,21 @@ const RoleBasedElement = ({
   children, 
   fallback = null 
 }) => {
-  const { loading } = useRBAC();
+  const { userRole, loading } = useRBAC();
   
-  // Don't render anything while loading
   if (loading) return null;
   
-  // Always show the children component regardless of role
-  return children;
+  let hasAccess = false;
+  
+  if (requiredRole === 'admin') {
+    hasAccess = userRole === 'admin';
+  } else if (requiredRole === 'instructor') {
+    hasAccess = ['admin', 'instructor'].includes(userRole);
+  } else if (requiredRole === 'student') {
+    hasAccess = ['admin', 'instructor', 'student'].includes(userRole);
+  }
+  
+  return hasAccess ? children : fallback;
 };
 
 export default RoleBasedElement;

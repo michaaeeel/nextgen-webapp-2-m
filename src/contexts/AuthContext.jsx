@@ -1,9 +1,7 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from '@/lib/supabase/client';
-import { signIn, signUp, signOut } from '@/lib/supabase/auth';
+import { supabase, signIn, signUp, signOut } from '@/lib/supabase';
 
 const AuthContext = createContext(null);
 
@@ -17,7 +15,7 @@ export function AuthProvider({ children }) {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      console.log("User:", session?.user);
+      console.log("User:", user);
       setLoading(false);
     });
 
@@ -88,7 +86,6 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      console.log("Calling signOut function");
       await signOut();
       setUser(null);
       toast({
@@ -97,10 +94,9 @@ export function AuthProvider({ children }) {
       });
       navigate('/');
     } catch (error) {
-      console.error("Sign out error in context:", error);
       toast({
         title: "Error",
-        description: "Failed to sign out: " + error.message,
+        description: "Failed to sign out.",
         variant: "destructive"
       });
     }
