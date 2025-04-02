@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -22,14 +21,27 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useRBAC } from "@/contexts/RBACContext";
+import { getUserProfile } from "@/lib/supabase/users";
 
 const Dashboard = () => {
   const { user, isAuthenticated, logout } = useAuth();
+  const { userRole } = useRBAC();
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedEnrollment, setSelectedEnrollment] = React.useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
+  const [profile, setProfile] = useState(null);
+
+  // Add this useEffect to fetch profile data
+  useEffect(() => {
+    if (user?.id) {
+      getUserProfile(user.id)
+        .then(data => setProfile(data))
+        .catch(error => console.error('Error fetching profile:', error));
+    }
+  }, [user?.id]);
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
@@ -37,7 +49,7 @@ const Dashboard = () => {
   }
 
   // Redirect instructors to their dashboard
-  if (user.role === "instructor") {
+  if (userRole === "instructor") {
     return <Navigate to="/instructor-dashboard" />;
   }
 
@@ -82,6 +94,12 @@ const Dashboard = () => {
     unenrollMutation.mutate(selectedEnrollment.enrollmentId);
   };
 
+  console.log({
+    authUser: user,  // from useAuth()
+    rbacRole: user.role, // from useAuth()
+    profile: user?.user_metadata  // from auth user
+  });
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -90,7 +108,9 @@ const Dashboard = () => {
         <div className="container mx-auto px-6">
           <div className="max-w-6xl mx-auto">
             <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold">Welcome, {user.name}</h1>
+              <h1 className="text-3xl font-bold">
+                Welcome, {profile ? profile.first_name : 'User'}
+              </h1>
               <button 
                 onClick={logout}
                 className="px-4 py-2 bg-secondary text-secondary-foreground rounded-md hover:bg-secondary/80 transition-colors"
@@ -200,15 +220,17 @@ const Dashboard = () => {
               <div className="space-y-4">
                 <div>
                   <span className="text-muted-foreground">Name:</span>
-                  <span className="ml-2">{user.name}</span>
+                  <span className="ml-2">
+                    {profile ? `${profile.first_name} ${profile.last_name}` : 'Loading...'}
+                  </span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Email:</span>
-                  <span className="ml-2">{user.email}</span>
+                  <span className="ml-2">{profile?.email || user?.email}</span>
                 </div>
                 <div>
                   <span className="text-muted-foreground">Role:</span>
-                  <span className="ml-2 capitalize">{user.role}</span>
+                  <span className="ml-2 capitalize">{userRole}</span>
                 </div>
               </div>
             </div>
