@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -34,13 +33,6 @@ const ProtectedRoute = ({ children, requiredRole }) => {
     hasAccess = ['admin', 'instructor', 'student'].includes(userRole);
   }
   
-  console.log('User role:', userRole, 'Required role:', requiredRole, 'Has access:', hasAccess);
-  
-  // Allow admin to access instructor routes
-  if (requiredRole === 'instructor' && userRole === 'admin') {
-    return children;
-  }
-  
   if (!hasAccess) {
     // Redirect to appropriate dashboard based on actual role
     if (userRole === 'admin') {
@@ -50,6 +42,18 @@ const ProtectedRoute = ({ children, requiredRole }) => {
     } else {
       return <Navigate to="/dashboard" />;
     }
+  }
+  
+  return children;
+};
+
+const InstructorRoute = ({ children }) => {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) return <LoadingSpinner />;
+  
+  if (!user || user.role !== 'instructor') {
+    return <Navigate to="/login" />;
   }
   
   return children;

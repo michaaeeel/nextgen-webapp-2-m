@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { checkPermission, supabase } from '@/lib/supabase';
@@ -14,14 +13,11 @@ export const getUserRole = async (userId) => {
       .single();
     
     if (error) {
-      console.error('Error fetching role from profiles:', error);
       // If profile doesn't exist yet, fall back to auth metadata
       const { data: { user } } = await supabase.auth.getUser();
-      console.log('User metadata role:', user?.user_metadata?.role);
       return user?.user_metadata?.role || 'student';
     }
     
-    console.log('Profile role:', data.role);
     return data.role;
   } catch (error) {
     console.error('Error getting user role:', error);
@@ -58,7 +54,6 @@ export function RBACProvider({ children }) {
 
       try {
         const role = await getUserRole(user.id);
-        console.log('Loaded role for user:', role);
         setUserRole(role);
         
         // Set permissions based on role
@@ -80,21 +75,6 @@ export function RBACProvider({ children }) {
 
     loadUserRole();
   }, [user, isAuthenticated]);
-
-  // Make sure the role is correctly determined from the user object directly
-  // in addition to the async loading above
-  useEffect(() => {
-    if (user && user.role === 'admin' && !loading) {
-      setUserRole('admin');
-      setPermissions(prev => ({
-        ...prev,
-        canManageCourses: true,
-        canInviteUsers: true,
-        canProcessRoleRequests: true,
-        canRemoveStudents: true
-      }));
-    }
-  }, [user, loading]);
 
   const hasPermission = async (permission) => {
     if (!isAuthenticated) return false;
