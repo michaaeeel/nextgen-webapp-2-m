@@ -104,8 +104,6 @@ const AcceptInvitationPage = () => {
 
       if (profileError) throw profileError;
 
-      console.log('Updating invitation:', invitation);
-      
       const { data: inviteData, error: inviteError } = await supabase
         .from('user_invitations')
         .update({
@@ -115,8 +113,6 @@ const AcceptInvitationPage = () => {
         .eq('email', invitation.email)
         .select();
 
-      console.log('Update result:', inviteData);
-      
       if (inviteError) {
         console.error('Invitation update error:', inviteError);
         throw inviteError;
