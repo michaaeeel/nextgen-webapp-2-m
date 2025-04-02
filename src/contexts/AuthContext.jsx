@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
@@ -13,15 +14,82 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      console.log("User:", user);
-      setLoading(false);
-    });
+    const loadSessionAndProfile = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.user) {
+          // Get user profile with role
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+            
+          if (profile) {
+            // Combine auth data with profile data
+            const userWithProfile = {
+              ...session.user,
+              role: profile.role || session.user.user_metadata?.role || 'student',
+              name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || session.user.email,
+            };
+            console.log("User with profile:", userWithProfile);
+            setUser(userWithProfile);
+          } else {
+            // Fallback to just auth data
+            const userWithoutProfile = {
+              ...session.user,
+              role: session.user.user_metadata?.role || 'student',
+              name: session.user.email,
+            };
+            console.log("User without profile:", userWithoutProfile);
+            setUser(userWithoutProfile);
+          }
+        } else {
+          setUser(null);
+        }
+      } catch (error) {
+        console.error("Error loading user session:", error);
+        setUser(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    loadSessionAndProfile();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        // Get user profile with role
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (profile) {
+          // Combine auth data with profile data
+          const userWithProfile = {
+            ...session.user,
+            role: profile.role || session.user.user_metadata?.role || 'student',
+            name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || session.user.email,
+          };
+          console.log("Auth change - User with profile:", userWithProfile);
+          setUser(userWithProfile);
+        } else {
+          // Fallback to just auth data
+          const userWithoutProfile = {
+            ...session.user,
+            role: session.user.user_metadata?.role || 'student',
+            name: session.user.email,
+          };
+          console.log("Auth change - User without profile:", userWithoutProfile);
+          setUser(userWithoutProfile);
+        }
+      } else {
+        setUser(null);
+      }
     });
 
     return () => subscription.unsubscribe();
