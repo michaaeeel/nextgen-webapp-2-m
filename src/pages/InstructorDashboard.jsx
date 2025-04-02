@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import { useRBAC } from "../contexts/RBACContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,8 @@ import { Progress } from "@/components/ui/progress";
 import { PlusCircle, Users, BookOpen, FileText, Clock, Edit } from "lucide-react";
 
 const InstructorDashboard = () => {
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated } = useAuth();
+  const { userRole } = useRBAC();
   const [activeTab, setActiveTab] = useState("overview");
   const [courses, setCourses] = useState([]);
   const navigate = useNavigate();
@@ -30,7 +31,7 @@ const InstructorDashboard = () => {
     return <Navigate to="/signin" />;
   }
 
-  if (user.role !== "instructor") {
+  if (!['admin', 'instructor'].includes(userRole)) { // Change this check
     return <Navigate to="/dashboard" />;
   }
 
