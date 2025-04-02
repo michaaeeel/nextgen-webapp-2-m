@@ -12,7 +12,7 @@ const DashboardHeader = ({ user, logout, handleCreateCourse }) => {
         <p className="text-muted-foreground">Welcome back, {user.name}</p>
       </div>
       <div className="flex gap-3">
-        <Button variant="outline" onClick={logout}>
+        <Button variant="outline" onClick={() => logout()}>
           Sign Out
         </Button>
         <Button className="flex items-center gap-2" onClick={handleCreateCourse}>

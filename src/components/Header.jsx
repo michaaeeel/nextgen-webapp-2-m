@@ -29,9 +29,12 @@ const Header = () => {
     };
   }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate('/');
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   return (
@@ -63,7 +66,6 @@ const Header = () => {
             Courses and Pricing
           </Link>
           
-          {/* Role-based navigation links */}
           {isAuthenticated && (
             <>
               <RoleBasedElement requiredRole="student">
@@ -195,7 +197,6 @@ const Header = () => {
         </button>
       </div>
 
-      {/* Mobile menu */}
       <div
         className={cn(
           "absolute top-full left-0 right-0 bg-primary shadow-lg transition-all duration-300 ease-apple overflow-hidden md:hidden",
@@ -282,10 +283,7 @@ const Header = () => {
           )}
           {isAuthenticated ? (
             <button
-              onClick={() => {
-                handleLogout();
-                setMobileMenuOpen(false);
-              }}
+              onClick={handleLogout}
               className="block py-2 text-lg font-medium text-white w-full text-left"
             >
               Sign Out
