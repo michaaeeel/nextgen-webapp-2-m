@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 
 // Enroll a student in a course
@@ -11,7 +12,7 @@ export const enrollInCourse = async (userId, courseId) => {
     .single();
     
   if (checkError && checkError.code !== 'PGSQL_ERROR_NO_DATA_FOUND') {
-    throw checkError;
+    throw new Error(`Failed to check enrollment: ${checkError.message}`);
   }
   
   if (existingEnrollment) {
@@ -31,7 +32,10 @@ export const enrollInCourse = async (userId, courseId) => {
     .select()
     .single();
     
-  if (error) throw error;
+  if (error) {
+    throw new Error(`Failed to enroll in course: ${error.message}`);
+  }
+  
   return data;
 };
 
@@ -46,7 +50,9 @@ export const getEnrolledCourses = async (userId) => {
     .eq('user_id', userId)
     .eq('status', 'active');
     
-  if (error) throw error;
+  if (error) {
+    throw new Error(`Failed to fetch enrolled courses: ${error.message}`);
+  }
   
   // Format the data to return just the courses with enrollment data
   return data.map(enrollment => ({
@@ -69,7 +75,9 @@ export const getEnrolledStudents = async (courseId) => {
     .eq('course_id', courseId)
     .eq('status', 'active');
     
-  if (error) throw error;
+  if (error) {
+    throw new Error(`Failed to fetch enrolled students: ${error.message}`);
+  }
   
   // Format the data to return just the students with enrollment data
   return data.map(enrollment => ({
@@ -94,6 +102,9 @@ export const unenrollFromCourse = async (enrollmentId) => {
     .select()
     .single();
     
-  if (error) throw error;
+  if (error) {
+    throw new Error(`Failed to unenroll from course: ${error.message}`);
+  }
+  
   return data;
 };
