@@ -94,11 +94,6 @@ const Dashboard = () => {
     unenrollMutation.mutate(selectedEnrollment.enrollmentId);
   };
 
-  console.log({
-    authUser: user,  // from useAuth()
-    rbacRole: user.role, // from useAuth()
-    profile: user?.user_metadata  // from auth user
-  });
 
   return (
     <div className="min-h-screen bg-background">
