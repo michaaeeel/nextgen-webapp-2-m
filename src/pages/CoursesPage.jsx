@@ -7,6 +7,8 @@ import { fetchCoursesByInstructor } from '@/services/courseService';
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import CourseList from "@/components/CourseList";
+import { Button } from "@/components/ui/button";
+import { PlusCircle } from "lucide-react";
 
 const CoursesPage = () => {
   const { user } = useAuth();
@@ -21,6 +23,10 @@ const CoursesPage = () => {
     queryFn: () => fetchCoursesByInstructor(user.id),
     enabled: !!user?.id
   });
+
+  const handleCreateCourse = () => {
+    navigate('/instructor-dashboard/courses/new');
+  };
 
   const handleEdit = (courseId) => {
     navigate(`/instructor-dashboard/courses/${courseId}/edit`);
@@ -37,10 +43,19 @@ const CoursesPage = () => {
       <main className="py-32">
         <div className="container mx-auto px-6">
           <div className="max-w-6xl mx-auto">
-            <h1 className="text-3xl font-bold mb-8">Manage Courses</h1>
+            <div className="flex justify-between items-center mb-8">
+              <h1 className="text-3xl font-bold">My Courses</h1>
+              <Button 
+                className="flex items-center gap-2" 
+                onClick={handleCreateCourse}
+              >
+                <PlusCircle className="h-4 w-4" />
+                Create Course
+              </Button>
+            </div>
             
             {isLoading ? (
-              <div className="text-center">Loading courses...</div>
+              <div className="text-center py-8">Loading courses...</div>
             ) : (
               <CourseList 
                 courses={courses} 

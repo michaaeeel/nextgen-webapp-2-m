@@ -20,8 +20,6 @@ const CourseList = ({
   const handleCreateCourse = () => {
     navigate(createUrl);
   };
-
-  // Remove the helper function that extracts first name since we now want to display full name
   
   return (
     <div className="space-y-6">
