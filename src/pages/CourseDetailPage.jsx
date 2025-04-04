@@ -1,12 +1,23 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from "../contexts/AuthContext";
 import { useQuery } from '@tanstack/react-query';
 import { fetchCourseById } from '@/services/courseService';
+import { useCourses } from "@/contexts/CourseContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import CourseDetail from "@/components/CourseDetail";
+import AdminCourseDetail from "@/components/AdminCourseDetail";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 
@@ -14,12 +25,13 @@ const CourseDetailPage = () => {
   const { courseId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { deleteCourse } = useCourses();
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   // Fetch course data
   const { 
     data: course, 
-    isLoading,
-    error
+    isLoading 
   } = useQuery({
     queryKey: ['course', courseId],
     queryFn: () => fetchCourseById(courseId)
@@ -28,7 +40,21 @@ const CourseDetailPage = () => {
   const handleEdit = (courseId) => {
     navigate(`/instructor-dashboard/courses/${courseId}/edit`);
   };
-  
+
+  const handleDelete = () => {
+    setIsDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    try {
+      await deleteCourse(courseId);
+      // Navigate back after deletion
+      navigate("/instructor-dashboard/courses");
+    } finally {
+      setIsDeleteDialogOpen(false);
+    }
+  };
+
   const handleBack = () => {
     navigate('/instructor-dashboard/courses');
   };
@@ -122,12 +148,34 @@ const CourseDetailPage = () => {
               <ArrowLeft className="h-4 w-4" />
               Back to Courses
             </Button>
-            <CourseDetail course={formattedCourse} onEdit={handleEdit} />
+            <AdminCourseDetail 
+              course={formattedCourse} 
+              onEdit={handleEdit} 
+              onDelete={handleDelete}
+            />
           </div>
         </div>
       </main>
       
       <Footer />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              course and all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

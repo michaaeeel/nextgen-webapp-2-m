@@ -1,54 +1,93 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useCourses } from '@/contexts/CourseContext';
 import { useAuth } from "../contexts/AuthContext";
-import { useQuery } from '@tanstack/react-query';
-import { fetchCoursesByInstructor } from '@/services/courseService';
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import CourseList from "@/components/CourseList";
-import { Button } from "@/components/ui/button";
-import { PlusCircle, AlertTriangle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
+import CourseList from '@/components/CourseList';
+import { Button } from '@/components/ui/button';
+import { PlusCircle } from 'lucide-react';
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/components/ui/use-toast';
 
 const CoursesPage = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  
-  // Fetch instructor's courses
-  const { 
-    data: coursesData = [],
-    isLoading,
-    error
-  } = useQuery({
-    queryKey: ['instructorCourses', user?.id],
-    queryFn: () => fetchCoursesByInstructor(user.id),
-    enabled: !!user?.id
-  });
+  const { user } = useAuth();
+  const { courses, deleteCourse, loading } = useCourses();
+  const [selectedCourseId, setSelectedCourseId] = useState(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { toast } = useToast();
 
-  // Sort courses: drafts first, then published courses
-  const courses = React.useMemo(() => {
-    return [...coursesData].sort((a, b) => {
-      // Sort by publish status (drafts first)
-      if (a.is_published !== b.is_published) {
-        return a.is_published ? 1 : -1;
-      }
-      // If publish status is the same, sort by created date (newest first)
-      return new Date(b.created_at) - new Date(a.created_at);
-    });
-  }, [coursesData]);
+  // Filter courses for the current instructor
+  const instructorCourses = React.useMemo(() => {
+    return courses.filter(course => course.instructor_id === user?.id);
+  }, [courses, user?.id]);
 
   const handleCreateCourse = () => {
     navigate('/instructor-dashboard/courses/new');
   };
 
-  const handleEdit = (courseId) => {
+  const handleViewCourse = (courseId) => {
+    navigate(`/instructor-dashboard/courses/${courseId}`);
+  };
+
+  const handleEditCourse = (courseId) => {
     navigate(`/instructor-dashboard/courses/${courseId}/edit`);
   };
 
-  const handleView = (courseId) => {
-    navigate(`/instructor-dashboard/courses/${courseId}`);
+  const handleDeleteCourse = (courseId) => {
+    setSelectedCourseId(courseId);
+    setIsDeleteDialogOpen(true);
   };
+
+  const confirmDelete = async () => {
+    try {
+      await deleteCourse(selectedCourseId);
+      toast({
+        title: "Success",
+        description: "Course deleted successfully!",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete course",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setSelectedCourseId(null);
+    }
+  };
+
+  // Convert snake_case database fields to camelCase for component props
+  const formattedCourses = instructorCourses.map(course => ({
+    id: course.id,
+    title: course.title,
+    description: course.description,
+    coverImage: course.cover_image,
+    price: course.price,
+    discountPrice: course.discount_price,
+    category: course.category,
+    level: course.level,
+    isPublished: course.is_published,
+    instructorId: course.instructor_id,
+    instructorName: course.instructor_name,
+    modules: course.modules || [],
+    assignments: course.assignments || [],
+    enrolledStudents: course.enrolled_students || [],
+    createdAt: course.created_at,
+    updatedAt: course.updated_at
+  }));
 
   return (
     <div className="min-h-screen bg-background">
@@ -56,58 +95,60 @@ const CoursesPage = () => {
       
       <main className="py-32">
         <div className="container mx-auto px-6">
-          <div className="max-w-6xl mx-auto">
-            <div className="flex justify-between items-center mb-8">
-              <h1 className="text-3xl font-bold">My Courses</h1>
-              <Button 
-                className="flex items-center gap-2" 
-                onClick={handleCreateCourse}
-              >
+          <div className="flex justify-between items-center mb-8">
+            <h1 className="text-3xl font-bold">My Courses</h1>
+            <Button onClick={handleCreateCourse} className="flex items-center gap-2">
+              <PlusCircle className="h-4 w-4" />
+              Create Course
+            </Button>
+          </div>
+          
+          {loading ? (
+            <div className="text-center py-8">Loading courses...</div>
+          ) : formattedCourses.length === 0 ? (
+            <div className="text-center py-16 bg-muted rounded-lg">
+              <h2 className="text-xl font-medium mb-2">No Courses Found</h2>
+              <p className="text-muted-foreground mb-6">
+                You haven't created any courses yet. Get started by creating your first course.
+              </p>
+              <Button onClick={handleCreateCourse} className="flex items-center gap-2 mx-auto">
                 <PlusCircle className="h-4 w-4" />
-                Create Course
+                Create Your First Course
               </Button>
             </div>
-            
-            {error && (
-              <Alert variant="destructive" className="mb-6">
-                <AlertTriangle className="h-4 w-4 mr-2" />
-                <AlertDescription>
-                  Error loading courses: {error.message || "Something went wrong. Please try again."}
-                </AlertDescription>
-              </Alert>
-            )}
-            
-            {isLoading ? (
-              <div className="flex justify-center items-center py-16">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-              </div>
-            ) : (
-              <CourseList 
-                courses={courses.map(course => ({
-                  id: course.id,
-                  title: course.title,
-                  description: course.description,
-                  coverImage: course.cover_image,
-                  isPublished: course.is_published,
-                  category: course.category,
-                  level: course.level,
-                  modules: course.modules || [],
-                  assignments: course.assignments || [],
-                  enrolledStudents: course.enrolled_students || [],
-                  instructorName: course.instructor_name,
-                  createdAt: course.created_at,
-                  updatedAt: course.updated_at
-                }))} 
-                onEdit={handleEdit} 
-                onView={handleView}
-                createUrl="/instructor-dashboard/courses/new"
-              />
-            )}
-          </div>
+          ) : (
+            <CourseList 
+              courses={formattedCourses} 
+              onView={handleViewCourse}
+              onEdit={handleEditCourse}
+              onDelete={handleDeleteCourse}
+            />
+          )}
         </div>
       </main>
       
       <Footer />
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              course and all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
