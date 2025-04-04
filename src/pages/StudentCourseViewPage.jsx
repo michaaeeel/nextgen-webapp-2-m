@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -17,6 +16,7 @@ import {
 } from '@/components/ui/tabs';
 import { ArrowLeft, BookOpen, FileText, Clock } from 'lucide-react';
 import { format } from 'date-fns';
+import { getYoutubeEmbedUrl } from '@/utils/youtubeUtils';
 
 const StudentCourseViewPage = () => {
   const { courseId } = useParams();
@@ -158,8 +158,27 @@ const StudentCourseViewPage = () => {
                             </div>
                           )}
                           
-                          {module.video_url && (
-                            <div className="mt-4">
+                          {/* YouTube Video Integration */}
+                          {module.youtubeUrl && getYoutubeEmbedUrl(module.youtubeUrl) && (
+                            <div className="mt-6">
+                              <h4 className="font-medium mb-2">Video Lecture:</h4>
+                              <div className="aspect-video rounded-md overflow-hidden bg-black">
+                                <iframe
+                                  width="100%"
+                                  height="100%"
+                                  src={getYoutubeEmbedUrl(module.youtubeUrl)}
+                                  title={`${module.title} video`}
+                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                  allowFullScreen
+                                  className="w-full h-full"
+                                ></iframe>
+                              </div>
+                            </div>
+                          )}
+                          
+                          {/* Keep existing video_url support for backward compatibility */}
+                          {!module.youtubeUrl && module.video_url && (
+                            <div className="mt-6">
                               <h4 className="font-medium mb-2">Video:</h4>
                               <div className="aspect-video rounded-md overflow-hidden bg-black">
                                 <iframe
