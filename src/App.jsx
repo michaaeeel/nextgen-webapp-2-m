@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -18,7 +19,6 @@ import CourseCreatePage from "./pages/CourseCreatePage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import CourseEditPage from "./pages/CourseEditPage";
 import CourseEnrollmentPage from "./pages/CourseEnrollmentPage";
-import StudentCourseViewPage from "./pages/StudentCourseViewPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminCoursesPage from "./pages/AdminCoursesPage";
 import AdminCourseCreatePage from "./pages/AdminCourseCreatePage";
@@ -50,20 +50,12 @@ const App = () => (
             <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
             <Route path="/new-invitation" element={<NewInvitationPage />} />
             
-            {/* Student Routes */}
+            {/* Student Route */}
             <Route 
               path="/dashboard" 
               element={
                 <ProtectedRoute requiredRole="student">
                   <Dashboard />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/courses/:courseId" 
-              element={
-                <ProtectedRoute requiredRole="student">
-                  <StudentCourseViewPage />
                 </ProtectedRoute>
               } 
             />
