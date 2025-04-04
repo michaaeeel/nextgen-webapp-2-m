@@ -46,9 +46,6 @@ const Dashboard = () => {
     return <Navigate to="/signin" />;
   }
 
-  if (userRole === "instructor") {
-    return <Navigate to="/instructor-dashboard" />;
-  }
 
   const { 
     data: enrolledCourses, 
