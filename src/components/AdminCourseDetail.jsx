@@ -5,9 +5,9 @@ import { useCourses } from "@/contexts/CourseContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Edit, ChevronLeft, User, Calendar, BookOpen, FileText, Trash2, UserCog, EyeOff, Eye, Youtube } from "lucide-react";
+import { Edit, ChevronLeft, User, Calendar, BookOpen, FileText, Trash2, EyeOff, Eye, Youtube } from "lucide-react";
 
-const AdminCourseDetail = ({ course, onEdit, onDelete, onAssignInstructor }) => {
+const AdminCourseDetail = ({ course, onEdit, onDelete }) => {
   const navigate = useNavigate();
   const { toggleCoursePublishStatus } = useCourses();
 
@@ -61,10 +61,6 @@ const AdminCourseDetail = ({ course, onEdit, onDelete, onAssignInstructor }) => 
             <Edit size={16} />
             Edit Course
           </Button>
-          <Button onClick={onAssignInstructor} variant="outline" className="flex items-center gap-2">
-            <UserCog size={16} />
-            Assign Instructor
-          </Button>
           <Button onClick={handleTogglePublish} variant="outline" className="flex items-center gap-2">
             {course.published ? (
               <>
@@ -85,8 +81,6 @@ const AdminCourseDetail = ({ course, onEdit, onDelete, onAssignInstructor }) => 
         </div>
       </div>
 
-      {/* ... rest of the component ... */}
-      
       <div>
         <h3 className="text-sm font-medium mb-2">Course Status</h3>
         <div className="flex items-center gap-2">
@@ -140,8 +134,8 @@ const AdminCourseDetail = ({ course, onEdit, onDelete, onAssignInstructor }) => 
                       <h4 className="text-sm font-medium flex items-center gap-2 mb-2">
                         <FileText className="h-4 w-4" /> Text Content
                       </h4>
-                      <div className="p-4 bg-gray-50 rounded-md">
-                        <p className="whitespace-pre-wrap">{module.content}</p>
+                      <div className="p-4 bg-secondary rounded-md">
+                        <p className="whitespace-pre-wrap text-foreground">{module.content}</p>
                       </div>
                     </div>
                   )}

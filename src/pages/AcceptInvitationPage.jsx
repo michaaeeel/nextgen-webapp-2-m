@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { supabase, validateInvitationToken, acceptInvitation } from "@/lib/supabase";
+import { supabase, validateInvitationToken } from "@/lib/supabase";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -26,7 +26,6 @@ const AcceptInvitationPage = () => {
   useEffect(() => {
     const validateToken = async () => {
       try {
-        // Get token from URL query parameter
         const params = new URLSearchParams(location.search);
         const token = params.get("token");
         
@@ -36,10 +35,8 @@ const AcceptInvitationPage = () => {
           return;
         }
         
-        // Use the validateInvitationToken helper function
         const invitationData = await validateInvitationToken(token);
         
-        // If we get here, the token is valid
         setInvitation(invitationData);
         setTokenValid(true);
       } catch (error) {
@@ -62,8 +59,9 @@ const AcceptInvitationPage = () => {
   
   const handleAcceptInvitation = async (e) => {
     e.preventDefault();
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
     
-    // Validate password match
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: "Passwords do not match",
@@ -73,7 +71,6 @@ const AcceptInvitationPage = () => {
       return;
     }
     
-    // Validate password strength (minimum 8 characters)
     if (formData.password.length < 8) {
       toast({
         title: "Password too short",
@@ -86,25 +83,51 @@ const AcceptInvitationPage = () => {
     setProcessingAction(true);
     
     try {
-      // Get token from URL
-      const params = new URLSearchParams(location.search);
-      const token = params.get("token");
-      
-      // Use the acceptInvitation helper function
-      await acceptInvitation(token, formData.password);
-      
-      // Success! Show toast and redirect
-      toast({
-        title: "Account created successfully",
-        description: "You can now sign in with your credentials.",
+      const { data: { user }, error: updateError } = await supabase.auth.updateUser({
+        password: formData.password
       });
+
+      if (updateError) throw updateError;
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          first_name: invitation.first_name,
+          last_name: invitation.last_name,
+          email: invitation.email,
+          role: 'instructor',
+          role_verified: true,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+
+      if (profileError) throw profileError;
+
+      const { data: inviteData, error: inviteError } = await supabase
+        .from('user_invitations')
+        .update({
+          status: 'accepted',
+          accepted_at: new Date().toISOString()
+        })
+        .eq('email', invitation.email)
+        .select();
+
+      if (inviteError) {
+        console.error('Invitation update error:', inviteError);
+        throw inviteError;
+      }
       
-      // Redirect to sign in page
-      setTimeout(() => navigate("/signin"), 2000);
+      toast({
+        title: "Success!",
+        description: "Your account has been set up successfully.",
+      });
+
+      navigate('/instructor-dashboard');
     } catch (error) {
       console.error("Error accepting invitation:", error);
       toast({
-        title: "Error creating account",
+        title: "Error Setting Up Account",
         description: error.message || "An unexpected error occurred.",
         variant: "destructive"
       });
@@ -221,10 +244,10 @@ const AcceptInvitationPage = () => {
               {processingAction ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creating Account...
+                  Setting Password...
                 </>
               ) : (
-                "Create Account & Sign In"
+                "Set Password & Continue"
               )}
             </Button>
           </form>
@@ -234,4 +257,4 @@ const AcceptInvitationPage = () => {
   );
 };
 
-export default AcceptInvitationPage; 
+export default AcceptInvitationPage;

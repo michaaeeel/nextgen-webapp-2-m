@@ -47,4 +47,16 @@ const ProtectedRoute = ({ children, requiredRole }) => {
   return children;
 };
 
+const InstructorRoute = ({ children }) => {
+  const { user, isLoading } = useAuth();
+  
+  if (isLoading) return <LoadingSpinner />;
+  
+  if (!user || user.role !== 'instructor') {
+    return <Navigate to="/login" />;
+  }
+  
+  return children;
+};
+
 export default ProtectedRoute;

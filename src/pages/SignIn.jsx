@@ -22,7 +22,6 @@ const SignIn = () => {
     rememberMe: false
   });
 
-  // If user is already authenticated, redirect to dashboard
   if (isAuthenticated) {
     return <Navigate to="/dashboard" />;
   }

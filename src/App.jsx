@@ -18,6 +18,7 @@ import CoursesPage from "./pages/CoursesPage";
 import CourseCreatePage from "./pages/CourseCreatePage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import CourseEditPage from "./pages/CourseEditPage";
+import CourseEnrollmentPage from "./pages/CourseEnrollmentPage";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminCoursesPage from "./pages/AdminCoursesPage";
 import AdminCourseCreatePage from "./pages/AdminCourseCreatePage";
@@ -28,6 +29,8 @@ import UsersPage from "./pages/UsersPage";
 import RoleRequestsPage from "./pages/RoleRequestsPage";
 import InvitationsPage from "./pages/InvitationsPage";
 import AcceptInvitationPage from "./pages/AcceptInvitationPage";
+import NewInvitationPage from "@/pages/NewInvitationPage";
+import StudentCourseViewPage from "@/pages/StudentCourseViewPage";
 import "./App.css";
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -44,14 +47,24 @@ const App = () => (
             <Route path="/signup" element={<SignUp />} />
             <Route path="/about" element={<About />} />
             <Route path="/courses" element={<CoursesAndPricing />} />
+            <Route path="/course-enrollment/:courseId" element={<CourseEnrollmentPage />} />
             <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
+            <Route path="/new-invitation" element={<NewInvitationPage />} />
             
-            {/* Student Route */}
+            {/* Student Routes */}
             <Route 
               path="/dashboard" 
               element={
                 <ProtectedRoute requiredRole="student">
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/courses/:courseId" 
+              element={
+                <ProtectedRoute requiredRole="student">
+                  <StudentCourseViewPage />
                 </ProtectedRoute>
               } 
             />
@@ -128,6 +141,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <InvitationsPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/admin-dashboard/invitations/new" 
+              element={
+                <ProtectedRoute requiredRole="admin">
+                  <NewInvitationPage />
                 </ProtectedRoute>
               } 
             />

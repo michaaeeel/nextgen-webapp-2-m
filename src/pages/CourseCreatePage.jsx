@@ -20,6 +20,7 @@ const CourseCreatePage = () => {
     mutationFn: createCourseApi,
     onSuccess: (newCourse) => {
       queryClient.invalidateQueries({ queryKey: ['courses'] });
+      queryClient.invalidateQueries({ queryKey: ['instructorCourses'] });
       
       toast({
         title: "Course Created",
@@ -42,14 +43,17 @@ const CourseCreatePage = () => {
     const newCourse = {
       title: courseData.title,
       description: courseData.description,
-      instructor_id: user.id,
-      instructor_name: courseData.instructorName || user.name,
+      cover_image: courseData.coverImage,
+      price: courseData.price,
+      discount_price: courseData.discountPrice || null,
+      category: courseData.category,
+      level: courseData.level,
+      is_published: courseData.isPublished,
       modules: courseData.modules,
-      assignments: courseData.assignments,
-      enrolled_students: [],
-      is_published: false
+      assignments: courseData.assignments
     };
     
+    // Instructor will be automatically set in the service
     createCourseMutation.mutate(newCourse);
   };
 

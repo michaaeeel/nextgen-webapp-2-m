@@ -62,10 +62,6 @@ const AdminCoursesPage = () => {
     }
   };
 
-  const handleAssignInstructor = (courseId) => {
-    navigate(`/admin-dashboard/courses/${courseId}/assign-instructor`);
-  };
-
   // Convert snake_case database fields to camelCase for component props
   const formattedCourses = courses.map(course => ({
     id: course.id,
@@ -119,7 +115,6 @@ const AdminCoursesPage = () => {
               onView={handleViewCourse}
               onEdit={handleEditCourse}
               onDelete={handleDeleteCourse}
-              onAssignInstructor={handleAssignInstructor}
               isAdmin={true}
             />
           )}

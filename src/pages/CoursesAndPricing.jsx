@@ -2,34 +2,19 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { fetchAllCourses } from "@/services/courseService";
-import { enrollInCourse } from "@/services/enrollmentService";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useDisclosure } from "@/hooks/use-disclosure";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 const CoursesAndPricing = () => {
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-  const [selectedCourse, setSelectedCourse] = React.useState(null);
-  const { isOpen, onOpen, onClose } = useDisclosure();
 
   // Fetch published courses
   const { data: courses = [], isLoading } = useQuery({
@@ -40,48 +25,9 @@ const CoursesAndPricing = () => {
     },
   });
 
-  // Enroll mutation
-  const enrollMutation = useMutation({
-    mutationFn: ({ userId, courseId }) => enrollInCourse(userId, courseId),
-    onSuccess: () => {
-      // Invalidate enrolled courses query
-      queryClient.invalidateQueries(['enrolledCourses', user?.id]);
-      toast({
-        title: "Enrollment Successful",
-        description: "You have successfully enrolled in the course.",
-      });
-      // In a real app, this would redirect to Stripe
-      // For now, we'll just close the dialog
-      onClose();
-    },
-    onError: (error) => {
-      toast({
-        title: "Enrollment Failed",
-        description: error.message || "There was an error enrolling in the course.",
-        variant: "destructive",
-      });
-    },
-  });
-
   const handleEnrollClick = (course) => {
-    if (!isAuthenticated) {
-      // Redirect to sign in if not authenticated
-      navigate("/signin", { state: { from: "/courses" } });
-      return;
-    }
-
-    // Set the selected course and open confirmation dialog
-    setSelectedCourse(course);
-    onOpen();
-  };
-
-  const confirmEnrollment = () => {
-    if (!selectedCourse || !user) return;
-    
-    enrollMutation.mutate({ 
-      userId: user.id, 
-      courseId: selectedCourse.id 
-    });
+    // Navigate to the course enrollment page
+    navigate(`/course-enrollment/${course.id}`);
   };
 
   return (
@@ -154,9 +100,8 @@ const CoursesAndPricing = () => {
                       </span>
                       <Button 
                         onClick={() => handleEnrollClick(course)}
-                        disabled={enrollMutation.isPending}
                       >
-                        {enrollMutation.isPending ? "Enrolling..." : "Enroll Now"}
+                        Enroll Now
                       </Button>
                     </div>
                   </CardFooter>
@@ -167,34 +112,6 @@ const CoursesAndPricing = () => {
         </div>
       </main>
       <Footer />
-      
-      {/* Enrollment Confirmation Dialog */}
-      <AlertDialog open={isOpen} onOpenChange={onClose}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Enrollment</AlertDialogTitle>
-            <AlertDialogDescription>
-              {selectedCourse && (
-                <>
-                  Are you sure you want to enroll in <strong>{selectedCourse.title}</strong>?
-                  <p className="mt-2">
-                    Price: ${selectedCourse.price || 99}
-                  </p>
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    Note: This is a demo. In a production environment, this would redirect to a payment page.
-                  </p>
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmEnrollment}>
-              {enrollMutation.isPending ? "Processing..." : "Confirm Enrollment"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };

@@ -1,92 +1,109 @@
-
 import { supabase } from '@/lib/supabase';
 
-// Enroll a student in a course
 export const enrollInCourse = async (userId, courseId) => {
   // Check if already enrolled
   const { data: existingEnrollment, error: checkError } = await supabase
-    .from('enrollments')
-    .select('*')
+    .from('user_course_enrollments')
+    .select('id')
     .eq('user_id', userId)
     .eq('course_id', courseId)
+    .eq('status', 'active')
     .single();
-    
-  if (checkError && checkError.code !== 'PGSQL_ERROR_NO_DATA_FOUND') {
-    throw checkError;
-  }
-  
+
   if (existingEnrollment) {
     throw new Error('You are already enrolled in this course');
   }
-  
-  // Create new enrollment record
+
+  // Create enrollment record
   const { data, error } = await supabase
-    .from('enrollments')
+    .from('user_course_enrollments')
     .insert({
       user_id: userId,
       course_id: courseId,
-      enrolled_at: new Date().toISOString(),
       status: 'active',
-      payment_status: 'completed' // In a real app with Stripe, this would be set after payment
+      enrolled_at: new Date().toISOString()
     })
     .select()
     .single();
-    
-  if (error) throw error;
+
+  if (error) {
+    throw new Error(`Failed to enroll in course: ${error.message}`);
+  }
+
   return data;
 };
 
 // Get all courses a student is enrolled in
 export const getEnrolledCourses = async (userId) => {
   const { data, error } = await supabase
-    .from('enrollments')
+    .from('user_course_enrollments')
     .select(`
-      *,
-      course:courses(*)
+      id,
+      enrolled_at,
+      status,
+      courses (
+        id,
+        title,
+        description,
+        cover_image,
+        price,
+        category,
+        level,
+        instructor_name,
+        modules
+      )
     `)
     .eq('user_id', userId)
-    .eq('status', 'active');
-    
-  if (error) throw error;
-  
-  // Format the data to return just the courses with enrollment data
+    .eq('status', 'active')
+    .order('enrolled_at', { ascending: false });
+
+  if (error) {
+    throw new Error(`Failed to fetch enrolled courses: ${error.message}`);
+  }
+
   return data.map(enrollment => ({
-    ...enrollment.course,
+    ...enrollment.courses,
     enrollmentId: enrollment.id,
     enrolledAt: enrollment.enrolled_at,
-    status: enrollment.status,
-    paymentStatus: enrollment.payment_status
+    status: enrollment.status
   }));
 };
 
 // Get all students enrolled in a course
 export const getEnrolledStudents = async (courseId) => {
   const { data, error } = await supabase
-    .from('enrollments')
+    .from('user_course_enrollments')
     .select(`
-      *,
-      student:profiles(id, first_name, last_name, email)
+      id,
+      enrolled_at,
+      status,
+      profiles!inner (
+        id,
+        first_name,
+        last_name,
+        email
+      )
     `)
     .eq('course_id', courseId)
-    .eq('status', 'active');
-    
-  if (error) throw error;
-  
-  // Format the data to return just the students with enrollment data
+    .eq('status', 'active')
+    .order('enrolled_at', { ascending: false });
+
+  if (error) {
+    throw new Error('Failed to fetch enrolled students');
+  }
+
   return data.map(enrollment => ({
-    ...enrollment.student,
+    ...enrollment.profiles,
     enrollmentId: enrollment.id,
     enrolledAt: enrollment.enrolled_at,
-    status: enrollment.status,
-    paymentStatus: enrollment.payment_status
+    status: enrollment.status
   }));
 };
 
-// Unenroll a student from a course
+// Unenroll from a course
 export const unenrollFromCourse = async (enrollmentId) => {
-  // We're not deleting the record, just setting status to "inactive"
   const { data, error } = await supabase
-    .from('enrollments')
+    .from('user_course_enrollments')
     .update({ 
       status: 'inactive',
       updated_at: new Date().toISOString()
@@ -94,7 +111,10 @@ export const unenrollFromCourse = async (enrollmentId) => {
     .eq('id', enrollmentId)
     .select()
     .single();
-    
-  if (error) throw error;
+
+  if (error) {
+    throw new Error(`Failed to unenroll from course: ${error.message}`);
+  }
+
   return data;
 };

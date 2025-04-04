@@ -1,153 +1,168 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form } from "@/components/ui/form";
 import CourseBasicInfoForm from './CourseBasicInfoForm';
 import CourseModulesSection from './CourseModulesSection';
 import CourseAssignmentsSection from './CourseAssignmentsSection';
 import { isValidYoutubeUrl } from '@/utils/youtubeUtils';
 
+// Define form schema with zod
+const formSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  description: z.string().min(1, "Description is required"),
+  coverImage: z.string().optional(),
+  price: z.coerce.number().min(0, "Price must be a positive number"),
+  discountPrice: z.coerce.number().min(0, "Discount price must be a positive number").optional().nullable(),
+  category: z.string().optional(),
+  level: z.enum(["beginner", "intermediate", "advanced"]),
+  isPublished: z.boolean().default(false),
+  modules: z.array(
+    z.object({
+      title: z.string().min(1, "Module title is required"),
+      description: z.string().optional(),
+      youtubeUrl: z.string().optional().refine(val => !val || isValidYoutubeUrl(val), {
+        message: "Please enter a valid YouTube URL"
+      }),
+      content: z.string().optional(),
+      lessons: z.array(z.any()).default([])
+    })
+  ).min(1, "At least one module is required"),
+  assignments: z.array(
+    z.object({
+      title: z.string().min(1, "Assignment title is required"),
+      description: z.string().optional(),
+      dueDate: z.string().optional()
+    })
+  ).default([])
+});
+
 const CourseForm = ({ course, onSubmit, isEditing = false }) => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  
-  const [formData, setFormData] = useState({
+
+  // Default values for the form
+  const defaultValues = {
     title: course?.title || '',
     description: course?.description || '',
-    instructorName: course?.instructorName || '',
-    modules: course?.modules || [{ 
+    coverImage: course?.coverImage || '',
+    price: course?.price || 0,
+    discountPrice: course?.discountPrice || null,
+    category: course?.category || '',
+    level: course?.level || 'beginner',
+    isPublished: course?.isPublished || false,
+    modules: course?.modules?.length > 0 ? course.modules : [{ 
       title: '', 
       description: '', 
       youtubeUrl: '',
       content: '', 
       lessons: [] 
     }],
-    assignments: course?.assignments || [{ title: '', description: '', dueDate: '' }],
+    assignments: course?.assignments?.length > 0 ? course.assignments : [{ 
+      title: '', 
+      description: '', 
+      dueDate: '' 
+    }],
+  };
+
+  // Create form
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues
   });
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
   const handleModuleChange = (index, field, value) => {
-    const updatedModules = [...formData.modules];
-    updatedModules[index][field] = value;
-    setFormData(prev => ({ ...prev, modules: updatedModules }));
-  };
-
-  const handleAssignmentChange = (index, field, value) => {
-    const updatedAssignments = [...formData.assignments];
-    updatedAssignments[index][field] = value;
-    setFormData(prev => ({ ...prev, assignments: updatedAssignments }));
+    const currentModules = form.getValues('modules');
+    currentModules[index][field] = value;
+    form.setValue('modules', currentModules);
   };
 
   const addModule = () => {
-    setFormData(prev => ({
-      ...prev,
-      modules: [...prev.modules, { 
-        title: '', 
-        description: '', 
-        youtubeUrl: '',
-        content: '', 
-        lessons: [] 
-      }]
-    }));
+    const currentModules = form.getValues('modules');
+    form.setValue('modules', [
+      ...currentModules,
+      { title: '', description: '', youtubeUrl: '', content: '', lessons: [] }
+    ]);
   };
 
   const removeModule = (index) => {
-    const updatedModules = [...formData.modules];
-    updatedModules.splice(index, 1);
-    setFormData(prev => ({ ...prev, modules: updatedModules }));
+    const currentModules = form.getValues('modules');
+    currentModules.splice(index, 1);
+    form.setValue('modules', currentModules);
+  };
+
+  const handleAssignmentChange = (index, field, value) => {
+    const currentAssignments = form.getValues('assignments');
+    currentAssignments[index][field] = value;
+    form.setValue('assignments', currentAssignments);
   };
 
   const addAssignment = () => {
-    setFormData(prev => ({
-      ...prev,
-      assignments: [...prev.assignments, { title: '', description: '', dueDate: '' }]
-    }));
+    const currentAssignments = form.getValues('assignments');
+    form.setValue('assignments', [
+      ...currentAssignments,
+      { title: '', description: '', dueDate: '' }
+    ]);
   };
 
   const removeAssignment = (index) => {
-    const updatedAssignments = [...formData.assignments];
-    updatedAssignments.splice(index, 1);
-    setFormData(prev => ({ ...prev, assignments: updatedAssignments }));
+    const currentAssignments = form.getValues('assignments');
+    currentAssignments.splice(index, 1);
+    form.setValue('assignments', currentAssignments);
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    
-    // Validate form
-    if (!formData.title || !formData.description || !formData.instructorName) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate YouTube URLs
-    const invalidYoutubeUrls = formData.modules
-      .filter(module => module.youtubeUrl && !isValidYoutubeUrl(module.youtubeUrl));
-    
-    if (invalidYoutubeUrls.length > 0) {
-      toast({
-        title: "Invalid YouTube URL",
-        description: "Please enter valid YouTube URLs for all modules.",
-        variant: "destructive",
-      });
-      return;
-    }
-
+  const handleFormSubmit = (data) => {
     // Filter out empty modules and assignments
     const filteredData = {
-      ...formData,
-      modules: formData.modules.filter(module => module.title.trim() !== ''),
-      assignments: formData.assignments.filter(assignment => assignment.title.trim() !== '')
+      ...data,
+      modules: data.modules.filter(module => module.title.trim() !== ''),
+      assignments: data.assignments.filter(assignment => assignment.title.trim() !== '')
     };
     
     onSubmit(filteredData);
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>{isEditing ? 'Edit Course' : 'Create New Course'}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <CourseBasicInfoForm 
-            formData={formData} 
-            handleChange={handleChange} 
-          />
-          
-          <CourseModulesSection
-            modules={formData.modules}
-            handleModuleChange={handleModuleChange}
-            addModule={addModule}
-            removeModule={removeModule}
-          />
-          
-          <CourseAssignmentsSection
-            assignments={formData.assignments}
-            handleAssignmentChange={handleAssignmentChange}
-            addAssignment={addAssignment}
-            removeAssignment={removeAssignment}
-          />
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button type="button" variant="outline" onClick={() => navigate('/instructor-dashboard')}>
-            Cancel
-          </Button>
-          <Button type="submit">
-            {isEditing ? 'Update Course' : 'Create Course'}
-          </Button>
-        </CardFooter>
-      </Card>
-    </form>
+    <Form {...form}>
+      <form onSubmit={form.handleSubmit(handleFormSubmit)}>
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>{isEditing ? 'Edit Course' : 'Create New Course'}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <CourseBasicInfoForm form={form} />
+            
+            <CourseModulesSection
+              modules={form.getValues('modules')}
+              handleModuleChange={handleModuleChange}
+              addModule={addModule}
+              removeModule={removeModule}
+            />
+            
+            <CourseAssignmentsSection
+              assignments={form.getValues('assignments')}
+              handleAssignmentChange={handleAssignmentChange}
+              addAssignment={addAssignment}
+              removeAssignment={removeAssignment}
+            />
+          </CardContent>
+          <CardFooter className="flex justify-between">
+            <Button type="button" variant="outline" onClick={() => navigate('/instructor-dashboard/courses')}>
+              Cancel
+            </Button>
+            <Button type="submit">
+              {isEditing ? 'Update Course' : 'Create Course'}
+            </Button>
+          </CardFooter>
+        </Card>
+      </form>
+    </Form>
   );
 };
 
