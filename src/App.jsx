@@ -30,6 +30,7 @@ import RoleRequestsPage from "./pages/RoleRequestsPage";
 import InvitationsPage from "./pages/InvitationsPage";
 import AcceptInvitationPage from "./pages/AcceptInvitationPage";
 import NewInvitationPage from "@/pages/NewInvitationPage";
+import StudentCourseViewPage from "@/pages/StudentCourseViewPage";
 import "./App.css";
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -50,12 +51,20 @@ const App = () => (
             <Route path="/accept-invitation" element={<AcceptInvitationPage />} />
             <Route path="/new-invitation" element={<NewInvitationPage />} />
             
-            {/* Student Route */}
+            {/* Student Routes */}
             <Route 
               path="/dashboard" 
               element={
                 <ProtectedRoute requiredRole="student">
                   <Dashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/dashboard/courses/:courseId" 
+              element={
+                <ProtectedRoute requiredRole="student">
+                  <StudentCourseViewPage />
                 </ProtectedRoute>
               } 
             />
