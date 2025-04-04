@@ -34,7 +34,6 @@ const Dashboard = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [profile, setProfile] = useState(null);
 
-  // Add this useEffect to fetch profile data
   useEffect(() => {
     if (user?.id) {
       getUserProfile(user.id)
@@ -43,17 +42,14 @@ const Dashboard = () => {
     }
   }, [user?.id]);
 
-  // Redirect to login if not authenticated
   if (!isAuthenticated) {
     return <Navigate to="/signin" />;
   }
 
-  // Redirect instructors to their dashboard
   if (userRole === "instructor") {
     return <Navigate to="/instructor-dashboard" />;
   }
 
-  // Fetch enrolled courses
   const { 
     data: enrolledCourses, 
     isLoading: isLoadingCourses 
@@ -63,11 +59,9 @@ const Dashboard = () => {
     enabled: !!user?.id
   });
 
-  // Unenroll mutation
   const unenrollMutation = useMutation({
     mutationFn: (enrollmentId) => unenrollFromCourse(enrollmentId),
     onSuccess: () => {
-      // Invalidate enrolled courses query
       queryClient.invalidateQueries(['enrolledCourses', user?.id]);
       toast({
         title: "Unenrolled Successfully",
@@ -93,7 +87,6 @@ const Dashboard = () => {
     if (!selectedEnrollment) return;
     unenrollMutation.mutate(selectedEnrollment.enrollmentId);
   };
-
 
   return (
     <div className="min-h-screen bg-background">
@@ -235,7 +228,6 @@ const Dashboard = () => {
       
       <Footer />
       
-      {/* Unenrollment Confirmation Dialog */}
       <AlertDialog open={isOpen} onOpenChange={onClose}>
         <AlertDialogContent>
           <AlertDialogHeader>
