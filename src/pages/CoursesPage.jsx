@@ -122,6 +122,8 @@ const CoursesPage = () => {
               onView={handleViewCourse}
               onEdit={handleEditCourse}
               onDelete={handleDeleteCourse}
+              isAdmin={true}
+              createUrl='/instructor-dashboard/courses/new'
             />
           )}
         </div>
