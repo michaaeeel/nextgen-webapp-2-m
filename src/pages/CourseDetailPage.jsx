@@ -31,7 +31,8 @@ const CourseDetailPage = () => {
   // Fetch course data
   const { 
     data: course, 
-    isLoading 
+    isLoading,
+    error: queryError 
   } = useQuery({
     queryKey: ['course', courseId],
     queryFn: () => fetchCourseById(courseId)
@@ -76,7 +77,7 @@ const CourseDetailPage = () => {
     );
   }
   
-  if (error || !course) {
+  if (queryError || !course) {
     return (
       <div className="min-h-screen bg-background">
         <Header />
