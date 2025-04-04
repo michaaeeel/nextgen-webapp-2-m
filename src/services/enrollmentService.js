@@ -1,41 +1,64 @@
-
 import { supabase } from '@/lib/supabase';
 
 // Enroll a student in a course
 export const enrollInCourse = async (userId, courseId) => {
-  // Check if already enrolled
-  const { data: existingEnrollment, error: checkError } = await supabase
-    .from('enrollments')
-    .select('*')
-    .eq('user_id', userId)
-    .eq('course_id', courseId)
-    .single();
-    
-  if (checkError && checkError.code !== 'PGSQL_ERROR_NO_DATA_FOUND') {
-    throw new Error(`Failed to check enrollment: ${checkError.message}`);
-  }
+  // Start a Supabase transaction
+  const { data: { user } } = await supabase.auth.getUser();
   
-  if (existingEnrollment) {
+  // Get user profile information
+  const { data: userProfile, error: profileError } = await supabase
+    .from('profiles')
+    .select('first_name, last_name, email')
+    .eq('id', userId)
+    .single();
+
+  if (profileError) {
+    throw new Error('Failed to fetch user profile');
+  }
+
+  // Check if already enrolled via enrolled_students JSONB
+  const { data: course, error: courseError } = await supabase
+    .from('courses')
+    .select('enrolled_students')
+    .eq('id', courseId)
+    .single();
+
+  if (courseError) {
+    throw new Error('Failed to check enrollment status');
+  }
+
+  const enrolledStudents = course.enrolled_students || [];
+  const isAlreadyEnrolled = enrolledStudents.some(student => student.student_id === userId);
+
+  if (isAlreadyEnrolled) {
     throw new Error('You are already enrolled in this course');
   }
-  
-  // Create new enrollment record
+
+  // Create new enrollment object
+  const enrollmentData = {
+    student_id: userId,
+    first_name: userProfile.first_name,
+    last_name: userProfile.last_name,
+    email: userProfile.email,
+    enrolled_at: new Date().toISOString(),
+    status: 'active'
+  };
+
+  // Update the course's enrolled_students array
   const { data, error } = await supabase
-    .from('enrollments')
-    .insert({
-      user_id: userId,
-      course_id: courseId,
-      enrolled_at: new Date().toISOString(),
-      status: 'active',
-      payment_status: 'completed' // In a real app with Stripe, this would be set after payment
+    .from('courses')
+    .update({
+      enrolled_students: [...enrolledStudents, enrollmentData],
+      updated_at: new Date().toISOString()
     })
+    .eq('id', courseId)
     .select()
     .single();
-    
+
   if (error) {
     throw new Error(`Failed to enroll in course: ${error.message}`);
   }
-  
+
   return data;
 };
 

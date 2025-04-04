@@ -1,7 +1,6 @@
-
 import React, { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { fetchCourseById } from '@/services/courseService';
 import { enrollInCourse } from '@/services/enrollmentService';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,6 +28,7 @@ const CourseEnrollmentPage = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   const [isProcessing, setIsProcessing] = useState(false);
+  const queryClient = useQueryClient();
   
   const { data: course, isLoading } = useQuery({
     queryKey: ['course', courseId],
@@ -41,10 +41,12 @@ const CourseEnrollmentPage = () => {
 
   const enrollMutation = useMutation({
     mutationFn: ({ userId, courseId }) => enrollInCourse(userId, courseId),
-    onSuccess: () => {
-      toast.success("Enrollment successful!");
-      // In a real app with Stripe integration, we'd redirect to Stripe here
-      // For now, we'll redirect to the dashboard
+    onSuccess: (data) => {
+      // Invalidate relevant queries
+      queryClient.invalidateQueries(['course', courseId]);
+      queryClient.invalidateQueries(['enrolledCourses', user?.id]);
+      
+      toast.success("Successfully enrolled in course!");
       navigate(`/dashboard`);
     },
     onError: (error) => {
@@ -60,10 +62,12 @@ const CourseEnrollmentPage = () => {
       return;
     }
 
+    if (!user?.id) {
+      toast.error("User information not available");
+      return;
+    }
+
     setIsProcessing(true);
-    
-    // In a real app, we would redirect to Stripe checkout here.
-    // For this demo, we'll just process the enrollment directly.
     enrollMutation.mutate({ 
       userId: user.id, 
       courseId 
