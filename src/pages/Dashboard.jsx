@@ -55,11 +55,11 @@ const Dashboard = () => {
 
   // Fetch enrolled courses
   const { 
-    data: enrolledCourses = [], 
-    isLoading 
+    data: enrolledCourses, 
+    isLoading: isLoadingCourses 
   } = useQuery({
-    queryKey: ['enrolledCourses', user.id],
-    queryFn: () => getEnrolledCourses(user.id),
+    queryKey: ['enrolledCourses', user?.id],
+    queryFn: () => getEnrolledCourses(user?.id),
     enabled: !!user?.id
   });
 
@@ -117,7 +117,7 @@ const Dashboard = () => {
             <div className="bg-card rounded-lg shadow-elegant p-8 mb-8">
               <h2 className="text-2xl font-semibold mb-4">Your Courses</h2>
               
-              {isLoading ? (
+              {isLoadingCourses ? (
                 <div className="text-center py-4">Loading your courses...</div>
               ) : enrolledCourses.length === 0 ? (
                 <div>
