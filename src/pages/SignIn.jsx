@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useNavigate, Navigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -10,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { resetPassword } from "@/lib/supabase";
-import { getUserRole } from "@/contexts/RBACContext";
 
 const SignIn = () => {
   const { login, isAuthenticated } = useAuth();
@@ -48,18 +46,8 @@ const SignIn = () => {
     setIsLoading(true);
     
     try {
-      const userData = await login(formData.email, formData.password);
-      
-      // Get user role and redirect based on role
-      const userRole = await getUserRole(userData.user.id);
-      
-      if (userRole === 'admin') {
-        navigate('/admin-dashboard');
-      } else if (userRole === 'instructor') {
-        navigate('/instructor-dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      await login(formData.email, formData.password);
+      navigate('/dashboard');
     } catch (error) {
       toast({
         title: "Authentication failed",
