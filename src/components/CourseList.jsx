@@ -57,7 +57,7 @@ const CourseList = ({
               <CardHeader className="pb-2 flex flex-row justify-between items-start">
                 <div>
                   <CardTitle className="text-xl font-semibold line-clamp-1">{course.title}</CardTitle>
-                  {isAdmin && course.instructorName && (
+                  {course.instructorName && (
                     <p className="text-sm text-muted-foreground">
                       Instructor: {course.instructorName}
                     </p>

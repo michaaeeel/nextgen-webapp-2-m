@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCourses } from '@/contexts/CourseContext';
@@ -28,7 +27,6 @@ const CoursesPage = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const { toast } = useToast();
 
-  // Filter courses for the current instructor
   const instructorCourses = React.useMemo(() => {
     return courses.filter(course => course.instructor_id === user?.id);
   }, [courses, user?.id]);
@@ -69,7 +67,6 @@ const CoursesPage = () => {
     }
   };
 
-  // Convert snake_case database fields to camelCase for component props
   const formattedCourses = instructorCourses.map(course => ({
     id: course.id,
     title: course.title,
@@ -122,7 +119,6 @@ const CoursesPage = () => {
               onView={handleViewCourse}
               onEdit={handleEditCourse}
               onDelete={handleDeleteCourse}
-              isAdmin={true}
               createUrl='/instructor-dashboard/courses/new'
             />
           )}
