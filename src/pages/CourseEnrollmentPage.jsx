@@ -42,7 +42,6 @@ const CourseEnrollmentPage = () => {
   const enrollMutation = useMutation({
     mutationFn: ({ userId, courseId }) => enrollInCourse(userId, courseId),
     onSuccess: (data) => {
-      // Invalidate relevant queries
       queryClient.invalidateQueries(['course', courseId]);
       queryClient.invalidateQueries(['enrolledCourses', user?.id]);
       
@@ -108,7 +107,6 @@ const CourseEnrollmentPage = () => {
     );
   }
 
-  // Extract course information
   const {
     title,
     description,
