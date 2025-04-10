@@ -122,14 +122,6 @@ const Header = () => {
                           <Mail className="mr-2 h-4 w-4" />
                           Invitations
                         </Link>
-                        <Link
-                          to="/admin-dashboard/role-requests"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          onClick={() => setAdminMenuOpen(false)}
-                        >
-                          <ClipboardList className="mr-2 h-4 w-4" />
-                          Role Requests
-                        </Link>
                       </div>
                     </div>
                   )}
@@ -266,14 +258,6 @@ const Header = () => {
                     >
                       <Mail className="mr-2 h-4 w-4" />
                       Invitations
-                    </Link>
-                    <Link
-                      to="/admin-dashboard/role-requests"
-                      className="block py-1 text-base text-white/90 hover:text-white flex items-center"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <ClipboardList className="mr-2 h-4 w-4" />
-                      Role Requests
                     </Link>
                   </div>
                 </div>
