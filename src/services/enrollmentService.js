@@ -38,20 +38,8 @@ export const getEnrolledCourses = async (userId) => {
   const { data, error } = await supabase
     .from('user_course_enrollments')
     .select(`
-      id,
-      enrolled_at,
-      status,
-      courses (
-        id,
-        title,
-        description,
-        cover_image,
-        price,
-        category,
-        level,
-        instructor_name,
-        modules
-      )
+      *,
+      courses (*)
     `)
     .eq('user_id', userId)
     .eq('status', 'active')
@@ -74,15 +62,8 @@ export const getEnrolledStudents = async (courseId) => {
   const { data, error } = await supabase
     .from('user_course_enrollments')
     .select(`
-      id,
-      enrolled_at,
-      status,
-      profiles!inner (
-        id,
-        first_name,
-        last_name,
-        email
-      )
+      *,
+      profiles!inner (*)
     `)
     .eq('course_id', courseId)
     .eq('status', 'active')
