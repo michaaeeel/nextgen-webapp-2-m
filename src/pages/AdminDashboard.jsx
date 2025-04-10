@@ -24,8 +24,7 @@ const AdminDashboard = () => {
             </div>
             
             <Tabs defaultValue="overview" onValueChange={setActiveTab} className="space-y-8">
-              <TabsList className="grid grid-cols-4 gap-2">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
+              <TabsList className="grid grid-cols-3 gap-2">
                 <TabsTrigger value="users">User Management</TabsTrigger>
                 <TabsTrigger value="invitations">Invitations</TabsTrigger>
                 <TabsTrigger value="courses">Course Management</TabsTrigger>
