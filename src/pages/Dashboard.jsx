@@ -1,26 +1,16 @@
+
 import React, { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getEnrolledCourses, unenrollFromCourse } from "@/services/enrollmentService";
+import { useQuery } from "@tanstack/react-query";
+import { getEnrolledCourses } from "@/services/enrollmentService";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { BookOpen, FileText, AlertTriangle } from "lucide-react";
-import { useDisclosure } from "@/hooks/use-disclosure";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+import { BookOpen, FileText } from "lucide-react";
 import { useRBAC } from "@/contexts/RBACContext";
 import { getUserProfile } from "@/lib/supabase/users";
 
@@ -30,8 +20,6 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedEnrollment, setSelectedEnrollment] = React.useState(null);
-  const { isOpen, onOpen, onClose } = useDisclosure();
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
@@ -55,35 +43,6 @@ const Dashboard = () => {
     queryFn: () => getEnrolledCourses(user?.id),
     enabled: !!user?.id
   });
-
-  const unenrollMutation = useMutation({
-    mutationFn: (enrollmentId) => unenrollFromCourse(enrollmentId),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['enrolledCourses', user?.id]);
-      toast({
-        title: "Unenrolled Successfully",
-        description: "You have been unenrolled from the course.",
-      });
-      onClose();
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message || "There was an error unenrolling from the course.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleUnenrollClick = (enrollment) => {
-    setSelectedEnrollment(enrollment);
-    onOpen();
-  };
-
-  const confirmUnenrollment = () => {
-    if (!selectedEnrollment) return;
-    unenrollMutation.mutate(selectedEnrollment.enrollmentId);
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -178,20 +137,13 @@ const Dashboard = () => {
                         </div>
                       </CardContent>
                       
-                      <CardFooter className="pt-2 border-t flex justify-between">
+                      <CardFooter className="pt-2 border-t">
                         <Button 
                           variant="outline" 
-                          className="w-3/4"
+                          className="w-full"
                           onClick={() => navigate(`/dashboard/courses/${course.id}`)}
                         >
                           Go to Course
-                        </Button>
-                        <Button 
-                          variant="ghost" 
-                          className="text-destructive"
-                          onClick={() => handleUnenrollClick(course)}
-                        >
-                          <AlertTriangle className="h-4 w-4" />
                         </Button>
                       </CardFooter>
                     </Card>
@@ -224,35 +176,9 @@ const Dashboard = () => {
       </main>
       
       <Footer />
-      
-      <AlertDialog open={isOpen} onOpenChange={onClose}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Confirm Unenrollment</AlertDialogTitle>
-            <AlertDialogDescription>
-              {selectedEnrollment && (
-                <>
-                  Are you sure you want to unenroll from <strong>{selectedEnrollment.title}</strong>?
-                  <p className="mt-4 text-sm text-muted-foreground">
-                    This action cannot be undone. You will need to enroll again if you change your mind.
-                  </p>
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmUnenrollment}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {unenrollMutation.isPending ? "Processing..." : "Unenroll"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
 
 export default Dashboard;
+
