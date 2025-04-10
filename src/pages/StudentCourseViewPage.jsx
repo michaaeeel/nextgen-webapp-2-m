@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -34,7 +35,7 @@ const StudentCourseViewPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="py-32">
+        <main className="pt-36 pb-32">
           <div className="container mx-auto px-6">
             <div className="max-w-6xl mx-auto">
               <div className="text-center py-12">Loading course...</div>
@@ -50,7 +51,7 @@ const StudentCourseViewPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="py-32">
+        <main className="pt-36 pb-32">
           <div className="container mx-auto px-6">
             <div className="max-w-6xl mx-auto">
               <div className="text-center py-12">
@@ -72,7 +73,7 @@ const StudentCourseViewPage = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="py-32">
+      <main className="pt-36 pb-32">
         <div className="container mx-auto px-6">
           <div className="max-w-6xl mx-auto">
             {/* Navigation */}

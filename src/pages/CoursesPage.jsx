@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCourses } from '@/contexts/CourseContext';
@@ -90,7 +91,7 @@ const CoursesPage = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="py-32">
+      <main className="pt-36 pb-32">
         <div className="container mx-auto px-6">
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold">My Courses</h1>
