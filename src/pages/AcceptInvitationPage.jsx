@@ -29,8 +29,6 @@ const AcceptInvitationPage = () => {
         const params = new URLSearchParams(location.search);
         const token = params.get("token");
         
-        console.log('[AcceptInvitation] Validating token:', token);
-        
         if (!token) {
           setErrorMessage("Invalid invitation link. No token provided.");
           setTokenValid(false);
@@ -38,16 +36,19 @@ const AcceptInvitationPage = () => {
         }
         
         const invitationData = await validateInvitationToken(token);
-        console.log('[AcceptInvitation] Invitation data:', invitationData);
         
         setInvitation(invitationData);
         setTokenValid(true);
       } catch (error) {
-        console.error("[AcceptInvitation] Token validation error:", error);
+        console.error("Error validating invitation:", error);
         setErrorMessage(error.message || "An error occurred while validating your invitation.");
         setTokenValid(false);
+      } finally {
+        setValidatingToken(false);
+        setLoading(false);
       }
     };
+    
     validateToken();
   }, [location.search]);
   
@@ -58,20 +59,36 @@ const AcceptInvitationPage = () => {
   
   const handleAcceptInvitation = async (e) => {
     e.preventDefault();
+    const params = new URLSearchParams(location.search);
+    const token = params.get("token");
     
-    console.log('[AcceptInvitation] Starting acceptance process');
+    if (formData.password !== formData.confirmPassword) {
+      toast({
+        title: "Passwords do not match",
+        description: "Please ensure your passwords match.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (formData.password.length < 8) {
+      toast({
+        title: "Password too short",
+        description: "Password must be at least 8 characters long.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     setProcessingAction(true);
+    
     try {
-      console.log('[AcceptInvitation] Updating user password');
       const { data: { user }, error: updateError } = await supabase.auth.updateUser({
         password: formData.password
       });
 
       if (updateError) throw updateError;
-      console.log('[AcceptInvitation] Password updated successfully');
 
-      console.log('[AcceptInvitation] Creating profile entry');
       const { error: profileError } = await supabase
         .from('profiles')
         .insert({
@@ -86,28 +103,21 @@ const AcceptInvitationPage = () => {
         });
 
       if (profileError) throw profileError;
-      console.log('[AcceptInvitation] Profile created successfully');
-
-      console.log('[AcceptInvitation] Updating invitation status with token:', token);
-      const params = new URLSearchParams(location.search);
-      const token = params.get("token");
 
       const { data: inviteData, error: inviteError } = await supabase
         .from('user_invitations')
         .update({
           status: 'accepted',
-          accepted_at: new Date().toISOString(),
-          user_id: user.id  // Add this line to link the invitation to the user
+          accepted_at: new Date().toISOString()
         })
-        .eq('token', token)  // Use token instead of email
+        .eq('email', invitation.email)
         .select();
 
       if (inviteError) {
-        console.error('[AcceptInvitation] Invitation update error:', inviteError);
+        console.error('Invitation update error:', inviteError);
         throw inviteError;
       }
-      console.log('[AcceptInvitation] Invitation status updated successfully:', inviteData);
-
+      
       toast({
         title: "Success!",
         description: "Your account has been set up successfully.",
@@ -115,7 +125,7 @@ const AcceptInvitationPage = () => {
 
       navigate('/instructor-dashboard');
     } catch (error) {
-      console.error("[AcceptInvitation] Error in acceptance process:", error);
+      console.error("Error accepting invitation:", error);
       toast({
         title: "Error Setting Up Account",
         description: error.message || "An unexpected error occurred.",
@@ -156,7 +166,7 @@ const AcceptInvitationPage = () => {
       </div>
     );
   }
-
+  
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -184,7 +194,7 @@ const AcceptInvitationPage = () => {
                 <span>{invitation.first_name} {invitation.last_name}</span>
               </div>
             </div>
-
+            
             <div className="space-y-2">
               <label htmlFor="password" className="text-sm font-medium">
                 Create Password*
@@ -203,10 +213,10 @@ const AcceptInvitationPage = () => {
                 />
               </div>
               <p className="text-sm text-muted-foreground">
-                Must be at least 8 characters long.
+                Must be at least 8 characters long
               </p>
             </div>
-
+            
             <div className="space-y-2">
               <label htmlFor="confirmPassword" className="text-sm font-medium">
                 Confirm Password*
@@ -225,7 +235,7 @@ const AcceptInvitationPage = () => {
                 />
               </div>
             </div>
-
+            
             <Button 
               type="submit" 
               className="w-full" 
