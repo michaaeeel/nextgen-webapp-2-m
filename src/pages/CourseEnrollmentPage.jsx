@@ -78,7 +78,7 @@ const CourseEnrollmentPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="py-16">
+        <main className="py-16 pt-10">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center py-12">Loading course details...</div>
           </div>
@@ -92,7 +92,7 @@ const CourseEnrollmentPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="py-16">
+        <main className="py-16 pt-10">
           <div className="container mx-auto px-4 md:px-6">
             <div className="text-center py-12">
               <h1 className="text-2xl font-bold mb-4">Course Not Found</h1>
@@ -125,7 +125,7 @@ const CourseEnrollmentPage = () => {
     <div className="min-h-screen bg-background">
       <Header />
       
-      <main className="py-16">
+      <main className="py-16 pt-10">
         <div className="container mx-auto px-4 md:px-6">
           {/* Back navigation */}
           <div className="mb-6">
