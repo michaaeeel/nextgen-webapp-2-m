@@ -6,7 +6,7 @@ import Footer from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { UserPlus, UserCog, Clipboard, Book, Mail, PlusCircle } from "lucide-react";
+import { UserPlus, UserCog, Book, Mail, PlusCircle } from "lucide-react";
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -24,16 +24,15 @@ const AdminDashboard = () => {
             </div>
             
             <Tabs defaultValue="overview" onValueChange={setActiveTab} className="space-y-8">
-              <TabsList className="grid grid-cols-5 gap-2">
+              <TabsList className="grid grid-cols-4 gap-2">
                 <TabsTrigger value="overview">Overview</TabsTrigger>
                 <TabsTrigger value="users">User Management</TabsTrigger>
                 <TabsTrigger value="invitations">Invitations</TabsTrigger>
-                <TabsTrigger value="requests">Role Requests</TabsTrigger>
                 <TabsTrigger value="courses">Course Management</TabsTrigger>
               </TabsList>
               
               <TabsContent value="overview" className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <Card>
                     <CardHeader className="pb-2">
                       <CardTitle className="text-lg">User Management</CardTitle>
@@ -57,20 +56,6 @@ const AdminDashboard = () => {
                         <Button className="w-full">
                           <UserPlus className="mr-2 h-4 w-4" />
                           Send Invites
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Role Requests</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <Link to="/admin-dashboard/role-requests">
-                        <Button className="w-full">
-                          <Clipboard className="mr-2 h-4 w-4" />
-                          Review Requests
                         </Button>
                       </Link>
                     </CardContent>

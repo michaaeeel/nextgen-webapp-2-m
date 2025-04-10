@@ -2,29 +2,6 @@
 import { supabase } from './client'
 
 // Role-related functions
-export const requestRoleChange = async (userId, requestedRole, reason) => {
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', userId)
-    .single();
-    
-  const { data, error } = await supabase
-    .from('role_change_requests')
-    .insert({
-      user_id: userId,
-      requested_by: (await supabase.auth.getUser()).data.user.id,
-      current_role: profile.role,
-      requested_role,
-      reason
-    })
-    .select()
-    .single();
-    
-  if (error) throw error;
-  return data;
-};
-
 export const processRoleChangeRequest = async (requestId, approve, reason) => {
   const { data: request } = await supabase
     .from('role_change_requests')
