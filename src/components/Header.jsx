@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "react-router-dom";
@@ -48,7 +47,7 @@ const Header = () => {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ease-apple bg-primary mb-4",
+        "fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ease-apple bg-primary",
         scrolled ? "shadow-md" : ""
       )}
     >
