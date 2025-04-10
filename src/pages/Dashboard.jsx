@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getEnrolledCourses } from "@/services/enrollmentService";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
@@ -33,7 +33,6 @@ const Dashboard = () => {
   if (!isAuthenticated) {
     return <Navigate to="/signin" />;
   }
-
 
   const { 
     data: enrolledCourses, 
@@ -181,4 +180,3 @@ const Dashboard = () => {
 };
 
 export default Dashboard;
-
