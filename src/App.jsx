@@ -26,7 +26,6 @@ import AdminCourseDetailPage from "./pages/AdminCourseDetailPage";
 import AdminCourseEditPage from "./pages/AdminCourseEditPage";
 import AdminCourseAssignInstructorPage from "./pages/AdminCourseAssignInstructorPage";
 import UsersPage from "./pages/UsersPage";
-import RoleRequestsPage from "./pages/RoleRequestsPage";
 import InvitationsPage from "./pages/InvitationsPage";
 import AcceptInvitationPage from "./pages/AcceptInvitationPage";
 import NewInvitationPage from "@/pages/NewInvitationPage";
@@ -125,14 +124,6 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="admin">
                   <UsersPage />
-                </ProtectedRoute>
-              } 
-            />
-            <Route 
-              path="/admin-dashboard/role-requests" 
-              element={
-                <ProtectedRoute requiredRole="admin">
-                  <RoleRequestsPage />
                 </ProtectedRoute>
               } 
             />

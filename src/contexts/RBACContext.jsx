@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { checkPermission, supabase } from '@/lib/supabase';
@@ -31,7 +32,6 @@ export function RBACProvider({ children }) {
   const [permissions, setPermissions] = useState({
     canManageCourses: false,
     canInviteUsers: false,
-    canProcessRoleRequests: false,
     canEnrollInCourses: false,
     canRemoveStudents: false
   });
@@ -44,7 +44,6 @@ export function RBACProvider({ children }) {
         setPermissions({
           canManageCourses: false,
           canInviteUsers: false,
-          canProcessRoleRequests: false,
           canEnrollInCourses: false,
           canRemoveStudents: false
         });
@@ -60,7 +59,6 @@ export function RBACProvider({ children }) {
         const newPermissions = {
           canManageCourses: ['instructor', 'admin'].includes(role),
           canInviteUsers: role === 'admin',
-          canProcessRoleRequests: role === 'admin',
           canEnrollInCourses: true, // All roles can enroll
           canRemoveStudents: ['instructor', 'admin'].includes(role)
         };

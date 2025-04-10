@@ -5,11 +5,13 @@ import { useAuth } from "../contexts/AuthContext";
 import { useRBAC } from '@/contexts/RBACContext';
 import RoleBasedElement from './RoleBasedElement';
 import { ChevronDown, Users, Mail, ClipboardList, LayoutDashboard } from "lucide-react";
+import { getUserProfile } from "@/lib/supabase/users";
 
 const Header = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [adminMenuOpen, setAdminMenuOpen] = useState(false);
+  const [profile, setProfile] = useState(null);
   const { user, isAuthenticated, logout } = useAuth();
   const navigate = useNavigate();
   const { userRole } = useRBAC();
@@ -28,6 +30,14 @@ const Header = () => {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
+
+  useEffect(() => {
+    if (user?.id) {
+      getUserProfile(user.id)
+        .then(data => setProfile(data))
+        .catch(error => console.error('Error fetching profile:', error));
+    }
+  }, [user?.id]);
 
   const handleLogout = () => {
     logout();
@@ -63,7 +73,6 @@ const Header = () => {
             Courses and Pricing
           </Link>
           
-          {/* Role-based navigation links */}
           {isAuthenticated && (
             <>
               <RoleBasedElement requiredRole="student">
@@ -122,14 +131,6 @@ const Header = () => {
                           <Mail className="mr-2 h-4 w-4" />
                           Invitations
                         </Link>
-                        <Link
-                          to="/admin-dashboard/role-requests"
-                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                          onClick={() => setAdminMenuOpen(false)}
-                        >
-                          <ClipboardList className="mr-2 h-4 w-4" />
-                          Role Requests
-                        </Link>
                       </div>
                     </div>
                   )}
@@ -143,7 +144,7 @@ const Header = () => {
           {isAuthenticated ? (
             <div className="flex items-center space-x-4">
               <span className="text-white/90">
-                Hello, {user.raw_user_meta_data?.firstName || 'User'}
+                Hello, {profile ? profile.first_name : 'User'}
               </span>
               <button
                 onClick={handleLogout}
@@ -195,7 +196,6 @@ const Header = () => {
         </button>
       </div>
 
-      {/* Mobile menu */}
       <div
         className={cn(
           "absolute top-full left-0 right-0 bg-primary shadow-lg transition-all duration-300 ease-apple overflow-hidden md:hidden",
@@ -266,14 +266,6 @@ const Header = () => {
                     >
                       <Mail className="mr-2 h-4 w-4" />
                       Invitations
-                    </Link>
-                    <Link
-                      to="/admin-dashboard/role-requests"
-                      className="block py-1 text-base text-white/90 hover:text-white flex items-center"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <ClipboardList className="mr-2 h-4 w-4" />
-                      Role Requests
                     </Link>
                   </div>
                 </div>

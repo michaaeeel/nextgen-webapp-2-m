@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -238,7 +239,6 @@ const UsersPage = () => {
                                 setNewRole(userData.role);
                                 setIsRoleDialogOpen(true);
                               }}
-                              disabled={!permissions.canProcessRoleRequests}
                             >
                               <UserCog className="h-4 w-4" />
                               <span className="sr-only">Change Role</span>

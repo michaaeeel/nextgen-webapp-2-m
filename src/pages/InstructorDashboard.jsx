@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useRBAC } from "../contexts/RBACContext";
@@ -8,11 +8,21 @@ import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PlusCircle, BookOpen, Users, FileText } from "lucide-react";
+import { getUserProfile } from "@/lib/supabase/users";
 
 const InstructorDashboard = () => {
   const { user, isAuthenticated } = useAuth();
   const { userRole } = useRBAC();
   const navigate = useNavigate();
+  const [profile, setProfile] = useState(null);
+
+  useEffect(() => {
+    if (user?.id) {
+      getUserProfile(user.id)
+        .then(data => setProfile(data))
+        .catch(error => console.error('Error fetching profile:', error));
+    }
+  }, [user?.id]);
 
   // Redirect to login if not authenticated
   if (!isAuthenticated) {
@@ -42,7 +52,7 @@ const InstructorDashboard = () => {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
               <div>
                 <h1 className="text-3xl font-bold">Instructor Dashboard</h1>
-                <p className="text-muted-foreground">Welcome back, {user?.name}</p>
+                <p className="text-muted-foreground">Welcome back, {profile ? profile.first_name : 'Instructor'}</p>
               </div>
               <div className="flex gap-3">
                 <Button className="flex items-center gap-2" onClick={handleCreateCourse}>

@@ -35,7 +35,7 @@ const CoursesAndPricing = () => {
       <Header />
       <main className="flex-grow py-16 px-6">
         <div className="container mx-auto max-w-6xl">
-          <h1 className="text-3xl md:text-4xl font-bold mb-10 text-left">
+          <h1 className="text-3xl md:text-4xl font-bold mb-10 text-left pt-10">
             Courses and Pricing
           </h1>
           
