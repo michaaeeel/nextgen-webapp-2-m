@@ -4,7 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import { useRBAC } from '@/contexts/RBACContext';
 import RoleBasedElement from './RoleBasedElement';
-import { ChevronDown, Users, Mail, ClipboardList, LayoutDashboard } from "lucide-react";
+import { ChevronDown, Users, Mail, ClipboardList, LayoutDashboard, Book } from "lucide-react";
 import { getUserProfile } from "@/lib/supabase/users";
 
 const Header = () => {
@@ -130,6 +130,14 @@ const Header = () => {
                         >
                           <Mail className="mr-2 h-4 w-4" />
                           Invitations
+                        </Link>
+                        <Link
+                          to="/admin-dashboard/courses"
+                          className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                          onClick={() => setAdminMenuOpen(false)}
+                        >
+                          <Book className="mr-2 h-4 w-4" />
+                          Course Management
                         </Link>
                       </div>
                     </div>
@@ -266,6 +274,14 @@ const Header = () => {
                     >
                       <Mail className="mr-2 h-4 w-4" />
                       Invitations
+                    </Link>
+                    <Link
+                      to="/admin-dashboard/courses"
+                      className="block py-1 text-base text-white/90 hover:text-white flex items-center"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <Book className="mr-2 h-4 w-4" />
+                      Course Management
                     </Link>
                   </div>
                 </div>
