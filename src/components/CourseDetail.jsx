@@ -8,6 +8,8 @@ import { useNavigate } from "react-router-dom";
 import CourseModulesSection from "./CourseModulesSection";
 import CourseAssignmentsSection from "./CourseAssignmentsSection";
 import EnrolledStudentsList from "./EnrolledStudentsList";
+import { useQuery } from "@tanstack/react-query";
+import { getEnrolledStudents } from "@/services/enrollmentService";
 
 const CourseDetail = ({ courseId, isAdmin = false }) => {
   const { getCourse, toggleCoursePublishStatus, deleteCourse } = useCourses();
@@ -17,6 +19,13 @@ const CourseDetail = ({ courseId, isAdmin = false }) => {
   const [isDeleting, setIsDeleting] = React.useState(false);
   
   const course = getCourse(courseId);
+  
+  // Get enrolled students count
+  const { data: enrolledStudents = [] } = useQuery({
+    queryKey: ['enrolledStudents', courseId],
+    queryFn: () => getEnrolledStudents(courseId),
+    enabled: !!courseId
+  });
   
   if (!course) {
     return <div>Loading course details...</div>;
@@ -120,7 +129,7 @@ const CourseDetail = ({ courseId, isAdmin = false }) => {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="modules">Modules</TabsTrigger>
           <TabsTrigger value="assignments">Assignments</TabsTrigger>
-          <TabsTrigger value="students">Students</TabsTrigger>
+          <TabsTrigger value="students">Students ({enrolledStudents.length})</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="space-y-4">

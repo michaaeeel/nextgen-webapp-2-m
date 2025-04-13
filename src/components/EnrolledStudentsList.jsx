@@ -1,14 +1,32 @@
 
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getEnrolledStudents } from "@/services/enrollmentService";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { getEnrolledStudents, unenrollFromCourse } from "@/services/enrollmentService";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, UserIcon, Mail, Clock } from "lucide-react";
+import { CalendarIcon, UserIcon, Mail, Clock, UserMinus } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 const EnrolledStudentsList = ({ courseId }) => {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [studentToUnenroll, setStudentToUnenroll] = React.useState(null);
+  const [isDialogOpen, setIsDialogOpen] = React.useState(false);
+  
   const { 
     data: students = [],
     isLoading,
@@ -18,6 +36,37 @@ const EnrolledStudentsList = ({ courseId }) => {
     queryFn: () => getEnrolledStudents(courseId),
     enabled: !!courseId
   });
+
+  const unenrollMutation = useMutation({
+    mutationFn: (enrollmentId) => unenrollFromCourse(enrollmentId),
+    onSuccess: () => {
+      toast({
+        title: "Student unenrolled successfully",
+        description: "The student has been removed from this course.",
+      });
+      queryClient.invalidateQueries({ queryKey: ['enrolledStudents', courseId] });
+      queryClient.invalidateQueries({ queryKey: ['courses'] });
+      setIsDialogOpen(false);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to unenroll student. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleUnenroll = (student) => {
+    setStudentToUnenroll(student);
+    setIsDialogOpen(true);
+  };
+
+  const confirmUnenroll = () => {
+    if (studentToUnenroll) {
+      unenrollMutation.mutate(studentToUnenroll.enrollmentId);
+    }
+  };
 
   if (isLoading) {
     return <div className="text-center py-4">Loading enrolled students...</div>;
@@ -55,6 +104,7 @@ const EnrolledStudentsList = ({ courseId }) => {
               <TableHead>Email</TableHead>
               <TableHead>Enrollment Date</TableHead>
               <TableHead>Status</TableHead>
+              <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -85,11 +135,43 @@ const EnrolledStudentsList = ({ courseId }) => {
                     {student.status}
                   </Badge>
                 </TableCell>
+                <TableCell>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    onClick={() => handleUnenroll(student)}
+                  >
+                    <UserMinus className="h-4 w-4 mr-1" />
+                    Unenroll
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
       </CardContent>
+      
+      <AlertDialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unenroll Student</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to unenroll {studentToUnenroll?.first_name} {studentToUnenroll?.last_name} from this course?
+              This action cannot be undone and the student will lose access to the course materials.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmUnenroll}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Unenroll
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from "../contexts/AuthContext";
 import { useQuery } from '@tanstack/react-query';
 import { fetchCourseById } from '@/services/courseService';
+import { getEnrolledStudents } from '@/services/enrollmentService';
 import { useCourses } from "@/contexts/CourseContext";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -36,6 +37,13 @@ const CourseDetailPage = () => {
   } = useQuery({
     queryKey: ['course', courseId],
     queryFn: () => fetchCourseById(courseId)
+  });
+
+  // Fetch enrolled students
+  const { data: enrolledStudents = [] } = useQuery({
+    queryKey: ['enrolledStudents', courseId],
+    queryFn: () => getEnrolledStudents(courseId),
+    enabled: !!courseId
   });
 
   const handleEdit = (courseId) => {
@@ -129,7 +137,7 @@ const CourseDetailPage = () => {
     instructorName: course.instructor_name,
     modules: course.modules || [],
     assignments: course.assignments || [],
-    enrolledStudents: course.enrolled_students || [],
+    enrolledStudents: enrolledStudents,
     createdAt: course.created_at,
     updatedAt: course.updated_at
   };
