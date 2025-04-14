@@ -103,7 +103,11 @@ const StudentManagement = ({ instructorId }) => {
 
   return (
     <div className="space-y-6">
-      <Accordion type="single" collapsible className="w-full">
+      <Accordion 
+        type="multiple" 
+        defaultValue={courses.map(course => course.id)} 
+        className="w-full"
+      >
         {courses.map((course) => (
           <CourseStudents 
             key={course.id} 
