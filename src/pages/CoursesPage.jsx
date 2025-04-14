@@ -82,6 +82,7 @@ const CoursesPage = () => {
     modules: course.modules || [],
     assignments: course.assignments || [],
     enrolledStudents: course.enrolled_students || [],
+    enrolledCount: course.enrolled_count || 0,  // Add this line
     createdAt: course.created_at,
     updatedAt: course.updated_at
   }));

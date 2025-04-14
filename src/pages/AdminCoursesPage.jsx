@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCourses } from '@/contexts/CourseContext';
@@ -78,6 +77,7 @@ const AdminCoursesPage = () => {
     modules: course.modules || [],
     assignments: course.assignments || [],
     enrolledStudents: course.enrolled_students || [],
+    enrolledCount: course.enrolled_count || 0,
     createdAt: course.created_at,
     updatedAt: course.updated_at
   }));

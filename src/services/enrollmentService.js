@@ -15,7 +15,7 @@ export const enrollInCourse = async (userId, courseId) => {
   }
 
   // Create enrollment record
-  const { data, error } = await supabase
+  const { data: enrollment, error: enrollError } = await supabase
     .from('user_course_enrollments')
     .insert({
       user_id: userId,
@@ -26,11 +26,27 @@ export const enrollInCourse = async (userId, courseId) => {
     .select()
     .single();
 
-  if (error) {
-    throw new Error(`Failed to enroll in course: ${error.message}`);
+  if (enrollError) {
+    throw new Error(`Failed to enroll in course: ${enrollError.message}`);
   }
 
-  return data;
+  // Update enrolled_count in courses table
+  const { error: updateError } = await supabase
+    .rpc('increment_course_enrollment', {
+      course_id: courseId
+    });
+
+  if (updateError) {
+    // Rollback enrollment if count update fails
+    await supabase
+      .from('user_course_enrollments')
+      .delete()
+      .eq('id', enrollment.id);
+    
+    throw new Error(`Failed to update course enrollment count: ${updateError.message}`);
+  }
+
+  return enrollment;
 };
 
 // Get all courses a student is enrolled in
