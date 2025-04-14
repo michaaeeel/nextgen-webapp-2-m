@@ -42,6 +42,10 @@ const InstructorDashboard = () => {
     navigate('/instructor-dashboard/courses');
   };
 
+  const handleManageStudents = () => {
+    navigate('/instructor-dashboard/students');
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Header />
@@ -112,9 +116,9 @@ const InstructorDashboard = () => {
                   <Button 
                     variant="outline"
                     className="w-full"
-                    disabled
+                    onClick={handleManageStudents}
                   >
-                    Coming Soon
+                    Manage Students
                   </Button>
                 </CardContent>
               </Card>

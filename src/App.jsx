@@ -14,6 +14,7 @@ import NotFound from "./pages/NotFound";
 import CoursesAndPricing from "./pages/CoursesAndPricing";
 import Dashboard from "./pages/Dashboard";
 import InstructorDashboard from "./pages/InstructorDashboard";
+import InstructorStudentsPage from "./pages/InstructorStudentsPage";
 import CoursesPage from "./pages/CoursesPage";
 import CourseCreatePage from "./pages/CourseCreatePage";
 import CourseDetailPage from "./pages/CourseDetailPage";
@@ -82,6 +83,14 @@ const App = () => (
               element={
                 <ProtectedRoute requiredRole="instructor">
                   <CoursesPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/instructor-dashboard/students" 
+              element={
+                <ProtectedRoute requiredRole="instructor">
+                  <InstructorStudentsPage />
                 </ProtectedRoute>
               } 
             />
