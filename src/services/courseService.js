@@ -1,4 +1,3 @@
-
 import { supabase } from '@/lib/supabase';
 
 // Get all courses
@@ -128,4 +127,20 @@ export const assignInstructorToCourse = async (courseId, instructorId, instructo
     
   if (error) throw error;
   return data;
+};
+
+// Function to get all courses for a specific instructor
+export const getInstructorCourses = async (instructorId) => {
+  const { data, error } = await supabase
+    .from('courses')
+    .select('*')
+    .eq('instructor_id', instructorId)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Error fetching instructor courses:', error);
+    throw new Error('Failed to fetch instructor courses');
+  }
+
+  return data || [];
 };

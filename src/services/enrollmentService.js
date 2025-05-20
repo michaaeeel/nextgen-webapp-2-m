@@ -1,3 +1,4 @@
+
 import { supabase } from '@/lib/supabase';
 
 export const enrollInCourse = async (userId, courseId) => {
@@ -15,7 +16,7 @@ export const enrollInCourse = async (userId, courseId) => {
   }
 
   // Create enrollment record
-  const { data, error } = await supabase
+  const { data: enrollment, error: enrollError } = await supabase
     .from('user_course_enrollments')
     .insert({
       user_id: userId,
@@ -26,11 +27,27 @@ export const enrollInCourse = async (userId, courseId) => {
     .select()
     .single();
 
-  if (error) {
-    throw new Error(`Failed to enroll in course: ${error.message}`);
+  if (enrollError) {
+    throw new Error(`Failed to enroll in course: ${enrollError.message}`);
   }
 
-  return data;
+  // Update enrolled_count in courses table
+  const { error: updateError } = await supabase
+    .rpc('increment_course_enrollment', {
+      course_id: courseId
+    });
+
+  if (updateError) {
+    // Rollback enrollment if count update fails
+    await supabase
+      .from('user_course_enrollments')
+      .delete()
+      .eq('id', enrollment.id);
+    
+    throw new Error(`Failed to update course enrollment count: ${updateError.message}`);
+  }
+
+  return enrollment;
 };
 
 // Get all courses a student is enrolled in
@@ -97,5 +114,60 @@ export const unenrollFromCourse = async (enrollmentId) => {
     throw new Error(`Failed to unenroll from course: ${error.message}`);
   }
 
+  // Update enrolled_count in courses table
+  const { error: updateError } = await supabase
+    .rpc('decrement_course_enrollment', {
+      course_id: data.course_id
+    });
+
+  if (updateError) {
+    console.error('Failed to update course enrollment count:', updateError);
+    // Don't throw here to still allow unenrollment even if count update fails
+  }
+
   return data;
+};
+
+// Get instructor's students (all students enrolled in any of the instructor's courses)
+export const getInstructorStudents = async (instructorId) => {
+  // First get all courses taught by the instructor
+  const { data: courses, error: courseError } = await supabase
+    .from('courses')
+    .select('id')
+    .eq('instructor_id', instructorId);
+  
+  if (courseError) {
+    throw new Error(`Failed to fetch instructor courses: ${courseError.message}`);
+  }
+  
+  if (!courses || courses.length === 0) {
+    return [];
+  }
+  
+  // Get all students enrolled in those courses
+  const courseIds = courses.map(course => course.id);
+  
+  const { data, error } = await supabase
+    .from('user_course_enrollments')
+    .select(`
+      *,
+      profiles!inner (*),
+      courses!inner (title)
+    `)
+    .in('course_id', courseIds)
+    .eq('status', 'active')
+    .order('enrolled_at', { ascending: false });
+  
+  if (error) {
+    throw new Error(`Failed to fetch instructor students: ${error.message}`);
+  }
+  
+  return data.map(enrollment => ({
+    ...enrollment.profiles,
+    enrollmentId: enrollment.id,
+    enrolledAt: enrollment.enrolled_at,
+    courseId: enrollment.course_id,
+    courseTitle: enrollment.courses.title,
+    status: enrollment.status
+  }));
 };

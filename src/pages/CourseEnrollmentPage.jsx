@@ -42,7 +42,9 @@ const CourseEnrollmentPage = () => {
   const enrollMutation = useMutation({
     mutationFn: ({ userId, courseId }) => enrollInCourse(userId, courseId),
     onSuccess: (data) => {
+      // Invalidate both course and courses queries to refresh the count
       queryClient.invalidateQueries(['course', courseId]);
+      queryClient.invalidateQueries(['courses']);
       queryClient.invalidateQueries(['enrolledCourses', user?.id]);
       
       toast.success("Successfully enrolled in course!");

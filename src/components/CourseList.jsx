@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
@@ -104,7 +103,7 @@ const CourseList = ({
                   </Badge>
                   <Badge variant="outline" className="flex items-center gap-1">
                     <Users className="h-3 w-3" />
-                    {course.enrolledStudents?.length || 0} Students
+                    {course.enrolledCount} {course.enrolledCount === 1 ? 'Student' : 'Students'}
                   </Badge>
                 </div>
               </CardContent>
