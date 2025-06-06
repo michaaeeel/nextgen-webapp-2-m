@@ -1,5 +1,6 @@
 
 import { useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 
 const Hero = () => {
   const heroRef = useRef(null);
@@ -170,9 +171,11 @@ const Hero = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row justify-center lg:justify-end gap-4 animate-fade-in stagger-2">
-            <button className="h-12 px-8 bg-primary text-primary-foreground rounded-md font-medium shadow-sm transition-apple hover:shadow-md hover:bg-primary/90 active:scale-[0.98]">
-              Get Started
-            </button>
+            <Link to="/signup">
+              <button className="h-12 px-8 bg-primary text-primary-foreground rounded-md font-medium shadow-sm transition-apple hover:shadow-md hover:bg-primary/90 active:scale-[0.98]">
+                Get Started
+              </button>
+            </Link>
           </div>
         </div>
       </div>
