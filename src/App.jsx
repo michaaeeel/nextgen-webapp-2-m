@@ -98,7 +98,7 @@ const App = () => (
               path="/instructor-dashboard/courses/new" 
               element={
                 <ProtectedRoute requiredRole="instructor">
-                  <CourseCreatePage />
+                  <AdminCourseCreatePage />
                 </ProtectedRoute>
               } 
             />
@@ -114,7 +114,7 @@ const App = () => (
               path="/instructor-dashboard/courses/:courseId/edit" 
               element={
                 <ProtectedRoute requiredRole="instructor">
-                  <CourseEditPage />
+                  <AdminCourseEditPage />
                 </ProtectedRoute>
               } 
             />
