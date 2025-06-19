@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import { Link, useNavigate } from "react-router-dom";
@@ -60,12 +61,14 @@ const Header = () => {
         </Link>
 
         <nav className="hidden md:flex items-center space-x-8">
-          <Link
-            to="/"
-            className="text-base font-medium text-white/90 hover:text-white transition-apple"
-          >
-            Get Started
-          </Link>
+          {!isAuthenticated && (
+            <Link
+              to="/"
+              className="text-base font-medium text-white/90 hover:text-white transition-apple"
+            >
+              Get Started
+            </Link>
+          )}
           <Link
             to="/courses"
             className="text-base font-medium text-white/90 hover:text-white transition-apple"
@@ -211,13 +214,15 @@ const Header = () => {
         )}
       >
         <div className="container mx-auto px-6 py-6 space-y-4">
-          <Link
-            to="/"
-            className="block py-2 text-lg font-medium text-white"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Get Started
-          </Link>
+          {!isAuthenticated && (
+            <Link
+              to="/"
+              className="block py-2 text-lg font-medium text-white"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Get Started
+            </Link>
+          )}
           <Link
             to="/courses"
             className="block py-2 text-lg font-medium text-white"
