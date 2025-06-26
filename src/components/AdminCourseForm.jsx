@@ -6,7 +6,7 @@ import * as z from 'zod';
 import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { isValidYoutubeUrl } from '@/utils/youtubeUtils';
+// import { isValidvideoUrl } from '@/utils/youtubeUtils';
 import CourseBasicInfoForm from './CourseBasicInfoForm';
 import CourseModulesSection from './CourseModulesSection';
 import CourseAssignmentsSection from './CourseAssignmentsSection';
@@ -30,7 +30,7 @@ const AdminCourseForm = ({ course, onSubmit, onCancel, isEditing = false }) => {
   const [modules, setModules] = useState([{ 
     title: '', 
     description: '', 
-    youtubeUrl: '',
+    videoUrl: '',
     content: '', 
     lessons: [] 
   }]);
@@ -78,7 +78,7 @@ const AdminCourseForm = ({ course, onSubmit, onCancel, isEditing = false }) => {
     setModules([...modules, { 
       title: '', 
       description: '', 
-      youtubeUrl: '',
+      videoUrl: '',
       content: '', 
       lessons: [] 
     }]);
@@ -108,20 +108,7 @@ const AdminCourseForm = ({ course, onSubmit, onCancel, isEditing = false }) => {
   };
 
   const handleFormSubmit = (data) => {
-    try {
-      // Validate YouTube URLs
-      const invalidYoutubeUrls = modules
-        .filter(module => module.youtubeUrl && !isValidYoutubeUrl(module.youtubeUrl));
-      
-      if (invalidYoutubeUrls.length > 0) {
-        toast({
-          title: "Invalid YouTube URL",
-          description: "Please enter valid YouTube URLs for all modules.",
-          variant: "destructive",
-        });
-        return;
-      }
-      
+    try {      
       // Filter out empty modules and assignments
       const filteredModules = modules.filter(module => module.title.trim() !== '');
       const filteredAssignments = assignments.filter(assignment => assignment.title.trim() !== '');

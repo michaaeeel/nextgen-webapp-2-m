@@ -11,7 +11,7 @@ import { Form } from "@/components/ui/form";
 import CourseBasicInfoForm from './CourseBasicInfoForm';
 import CourseModulesSection from './CourseModulesSection';
 import CourseAssignmentsSection from './CourseAssignmentsSection';
-import { isValidYoutubeUrl } from '@/utils/youtubeUtils';
+import { isValidvideoUrl } from '@/utils/youtubeUtils';
 
 // Define form schema with zod
 const formSchema = z.object({
@@ -27,7 +27,7 @@ const formSchema = z.object({
     z.object({
       title: z.string().min(1, "Module title is required"),
       description: z.string().optional(),
-      youtubeUrl: z.string().optional().refine(val => !val || isValidYoutubeUrl(val), {
+      videoUrl: z.string().optional().refine(val => !val || isValidvideoUrl(val), {
         message: "Please enter a valid YouTube URL"
       }),
       content: z.string().optional(),
@@ -60,7 +60,7 @@ const CourseForm = ({ course, onSubmit, isEditing = false }) => {
     modules: course?.modules?.length > 0 ? course.modules : [{ 
       title: '', 
       description: '', 
-      youtubeUrl: '',
+      videoUrl: '',
       content: '', 
       lessons: [] 
     }],
@@ -87,7 +87,7 @@ const CourseForm = ({ course, onSubmit, isEditing = false }) => {
     const currentModules = form.getValues('modules');
     form.setValue('modules', [
       ...currentModules,
-      { title: '', description: '', youtubeUrl: '', content: '', lessons: [] }
+      { title: '', description: '', videoUrl: '', content: '', lessons: [] }
     ]);
   };
 

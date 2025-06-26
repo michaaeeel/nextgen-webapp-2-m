@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -14,6 +13,25 @@ const CourseModuleForm = ({
   onModuleChange, 
   onRemoveModule 
 }) => {
+  const handleCloudinaryUpload = () => {
+    window.cloudinary.openUploadWidget(
+      {
+        cloudName: 'dlze4fct7', // replace with your Cloudinary cloud name
+        uploadPreset: 'unsigned_videos', // replace with your unsigned upload preset
+        sources: ['local', 'url', 'camera'],
+        resourceType: 'video',
+        multiple: false,
+        maxFileSize: 500000000, // optional: limit file size (bytes)
+      },
+      (error, result) => {
+        if (!error && result && result.event === "success") {
+          // Store the uploaded video URL in module.videoUrl
+          onModuleChange(index, 'videoUrl', result.info.secure_url);
+        }
+      }
+    );
+  };
+
   return (
     <Card key={index} className="p-4 relative">
       <Button
@@ -46,34 +64,23 @@ const CourseModuleForm = ({
           />
         </div>
         <div>
-          <Label 
-            htmlFor={`module-youtube-${index}`}
-            className="flex items-center gap-2"
-          >
-            <Youtube size={16} /> YouTube Video URL
+          <Label className="flex items-center gap-2">
+            <Youtube size={16} /> Upload Video
           </Label>
-          <Input
-            id={`module-youtube-${index}`}
-            value={module.youtubeUrl || ''}
-            onChange={(e) => onModuleChange(index, 'youtubeUrl', e.target.value)}
-            placeholder="https://www.youtube.com/watch?v=example"
-          />
-        </div>
-        
-        {module.youtubeUrl && getYoutubeEmbedUrl(module.youtubeUrl) && (
-          <div className="mt-2">
-            <Label>Video Preview</Label>
-            <div className="aspect-w-16 aspect-h-9 mt-1 rounded overflow-hidden">
-              <iframe
-                src={getYoutubeEmbedUrl(module.youtubeUrl)}
-                title={`YouTube video preview for ${module.title || 'module'}`}
-                className="w-full h-56 border-0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              ></iframe>
+          <Button type="button" onClick={handleCloudinaryUpload}>
+            Upload Video
+          </Button>
+          {module.videoUrl && (
+            <div className="mt-2">
+              <Label>Video Preview</Label>
+              <video
+                src={module.videoUrl}
+                controls
+                className="w-full h-56 rounded"
+              />
             </div>
-          </div>
-        )}
+          )}
+        </div>
         
         <div>
           <Label 
