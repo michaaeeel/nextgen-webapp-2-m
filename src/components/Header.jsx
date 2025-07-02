@@ -63,7 +63,7 @@ const Header = () => {
         <nav className="hidden md:flex items-center space-x-8">
           {!isAuthenticated && (
             <Link
-              to="/"
+              to="/signup"
               className="text-base font-medium text-white/90 hover:text-white transition-apple"
             >
               Get Started
