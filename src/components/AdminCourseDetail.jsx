@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCourses } from "@/contexts/CourseContext";
@@ -13,27 +12,6 @@ const AdminCourseDetail = ({ course, onEdit, onDelete }) => {
 
   const handleTogglePublish = () => {
     toggleCoursePublishStatus(course.id);
-  };
-
-  // Function to extract YouTube video ID from URL
-  const getYoutubeEmbedUrl = (url) => {
-    if (!url) return null;
-    
-    let videoId = null;
-    
-    // Match youtube.com/watch?v=ID format
-    const watchUrlMatch = url.match(/youtube\.com\/watch\?v=([^&]+)/);
-    if (watchUrlMatch) videoId = watchUrlMatch[1];
-    
-    // Match youtu.be/ID format
-    const shortUrlMatch = url.match(/youtu\.be\/([^?&]+)/);
-    if (shortUrlMatch) videoId = shortUrlMatch[1];
-    
-    // Match youtube.com/embed/ID format
-    const embedUrlMatch = url.match(/youtube\.com\/embed\/([^?&]+)/);
-    if (embedUrlMatch) videoId = embedUrlMatch[1];
-    
-    return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
   };
 
   if (!course) {
@@ -112,19 +90,18 @@ const AdminCourseDetail = ({ course, onEdit, onDelete }) => {
                 <CardContent className="space-y-4">
                   <p>{module.description}</p>
                   
-                  {module.youtubeUrl && getYoutubeEmbedUrl(module.youtubeUrl) && (
+                  {module.videoUrl && (
                     <div className="mt-4">
                       <h4 className="text-sm font-medium flex items-center gap-2 mb-2">
                         <Youtube className="h-4 w-4" /> Video Content
                       </h4>
                       <div className="aspect-w-16 aspect-h-9 mt-1 rounded overflow-hidden">
-                        <iframe
-                          src={getYoutubeEmbedUrl(module.youtubeUrl)}
-                          title={`YouTube video for ${module.title}`}
-                          className="w-full h-56 border-0"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                        ></iframe>
+                        <video
+                          src={module.videoUrl}
+                          controls
+                          className="w-full h-56 rounded"
+                          title={`Video for ${module.title}`}
+                        />
                       </div>
                     </div>
                   )}

@@ -4,8 +4,29 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/comp
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Upload, Image } from "lucide-react";
 
 const CourseBasicInfoForm = ({ form }) => {
+  const handleCloudinaryImageUpload = () => {
+    window.cloudinary.openUploadWidget(
+      {
+        cloudName: 'dlze4fct7', // replace with your Cloudinary cloud name
+        uploadPreset: 'unsigned_videos', // replace with your unsigned upload preset
+        sources: ['local', 'url', 'camera'],
+        resourceType: 'image',
+        multiple: false,
+        maxFileSize: 10000000, // 10MB limit for images
+      },
+      (error, result) => {
+        if (!error && result && result.event === "success") {
+          // Store the uploaded image URL in coverImage field
+          form.setValue('coverImage', result.info.secure_url);
+        }
+      }
+    );
+  };
+
   return (
     <div className="space-y-4">
       <FormField
@@ -41,9 +62,26 @@ const CourseBasicInfoForm = ({ form }) => {
         name="coverImage"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Cover Image URL</FormLabel>
+            <FormLabel className="flex items-center gap-2">
+              <Image size={16} /> Upload Cover Image
+            </FormLabel>
             <FormControl>
-              <Input {...field} />
+              <div className="space-y-2">
+                <Button type="button" onClick={handleCloudinaryImageUpload} className="flex items-center gap-2">
+                  <Upload size={16} />
+                  Upload Image
+                </Button>
+                {field.value && (
+                  <div className="mt-2">
+                    <p className="text-sm text-gray-600 mb-2">Cover Image Preview</p>
+                    <img
+                      src={field.value}
+                      alt="Cover preview"
+                      className="w-full max-w-md h-48 object-cover rounded border"
+                    />
+                  </div>
+                )}
+              </div>
             </FormControl>
             <FormMessage />
           </FormItem>

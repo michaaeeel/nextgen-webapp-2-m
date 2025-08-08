@@ -4,7 +4,7 @@
  * @param {string} url - The URL to validate
  * @returns {boolean} - Whether the URL is valid
  */
-export const isValidYoutubeUrl = (url) => {
+export const isValidvideoUrl = (url) => {
   if (!url) return true; // Empty URLs are allowed
   const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.?be)\/.+$/;
   return youtubeRegex.test(url);

@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/tabs';
 import { ArrowLeft, BookOpen, FileText, Clock } from 'lucide-react';
 import { format } from 'date-fns';
-import { getYoutubeEmbedUrl } from '@/utils/youtubeUtils';
 
 const StudentCourseViewPage = () => {
   const { courseId } = useParams();
@@ -158,38 +157,32 @@ const StudentCourseViewPage = () => {
                             </div>
                           )}
                           
-                          {/* YouTube Video Integration */}
-                          {module.youtubeUrl && getYoutubeEmbedUrl(module.youtubeUrl) && (
+                          {/* Cloudinary Video Preview */}
+                          {module.videoUrl && (
                             <div className="mt-6">
                               <h4 className="font-medium mb-2">Video Lecture:</h4>
-                              <div className="aspect-video rounded-md overflow-hidden bg-black">
-                                <iframe
-                                  width="100%"
-                                  height="100%"
-                                  src={getYoutubeEmbedUrl(module.youtubeUrl)}
+                              <div className="aspect-video rounded-md overflow-hidden bg-black max-w-xl mx-auto">
+                                <video
+                                  src={module.videoUrl}
+                                  controls
+                                  className="w-full rounded"
                                   title={`${module.title} video`}
-                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                  allowFullScreen
-                                  className="w-full h-full"
-                                ></iframe>
+                                />
                               </div>
                             </div>
                           )}
-                          
+
                           {/* Keep existing video_url support for backward compatibility */}
-                          {!module.youtubeUrl && module.video_url && (
+                          {!module.videoUrl && module.video_url && (
                             <div className="mt-6">
                               <h4 className="font-medium mb-2">Video:</h4>
                               <div className="aspect-video rounded-md overflow-hidden bg-black">
-                                <iframe
-                                  width="100%"
-                                  height="100%"
+                                <video
                                   src={module.video_url}
+                                  controls
+                                  className="w-full h-56 rounded"
                                   title={module.title}
-                                  frameBorder="0"
-                                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                  allowFullScreen
-                                ></iframe>
+                                />
                               </div>
                             </div>
                           )}
