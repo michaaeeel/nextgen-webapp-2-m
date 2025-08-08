@@ -133,3 +133,8 @@
   transform: scaleX(1);
   transform-origin: bottom left;
 }
+@layer base {
+    #lovable-badge {
+      display: none !important;
+    }
+}
