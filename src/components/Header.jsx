@@ -182,29 +182,46 @@ const Header = () => {
           )}
         </div>
 
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 text-white"
-          aria-label="Toggle menu"
-        >
-          <div className="w-6 flex flex-col items-end space-y-1.5">
-            <span 
-              className={cn("block h-0.5 bg-current transition-all duration-300 ease-apple", 
-                mobileMenuOpen ? "w-6 translate-y-2 rotate-45" : "w-6"
-              )}
-            />
-            <span 
-              className={cn("block h-0.5 bg-current transition-all duration-300 ease-apple", 
-                mobileMenuOpen ? "opacity-0" : "w-4"
-              )}
-            />
-            <span 
-              className={cn("block h-0.5 bg-current transition-all duration-300 ease-apple", 
-                mobileMenuOpen ? "w-6 -translate-y-2 -rotate-45" : "w-5"
-              )}
-            />
-          </div>
-        </button>
+        <div className="md:hidden flex items-center space-x-3">
+          {isAuthenticated ? (
+            <button
+              onClick={handleLogout}
+              className="text-sm font-medium text-white/90 hover:text-white transition-apple px-3 py-1 border border-white/30 rounded-md"
+            >
+              Sign Out
+            </button>
+          ) : (
+            <Link
+              to="/signin"
+              className="text-sm font-medium text-white/90 hover:text-white transition-apple px-3 py-1 border border-white/30 rounded-md"
+            >
+              Sign In
+            </Link>
+          )}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="p-2 text-white"
+            aria-label="Toggle menu"
+          >
+            <div className="w-6 flex flex-col items-end space-y-1.5">
+              <span 
+                className={cn("block h-0.5 bg-current transition-all duration-300 ease-apple", 
+                  mobileMenuOpen ? "w-6 translate-y-2 rotate-45" : "w-6"
+                )}
+              />
+              <span 
+                className={cn("block h-0.5 bg-current transition-all duration-300 ease-apple", 
+                  mobileMenuOpen ? "opacity-0" : "w-4"
+                )}
+              />
+              <span 
+                className={cn("block h-0.5 bg-current transition-all duration-300 ease-apple", 
+                  mobileMenuOpen ? "w-6 -translate-y-2 -rotate-45" : "w-5"
+                )}
+              />
+            </div>
+          </button>
+        </div>
       </div>
 
       <div
@@ -304,22 +321,13 @@ const Header = () => {
               Sign Out
             </button>
           ) : (
-            <>
-              <Link
-                to="/signin"
-                className="block py-2 text-lg font-medium text-white"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Sign In
-              </Link>
-              <Link
-                to="/about"
-                className="block py-2 text-lg font-medium text-white"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                About
-              </Link>
-            </>
+            <Link
+              to="/about"
+              className="block py-2 text-lg font-medium text-white"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              About
+            </Link>
           )}
         </div>
       </div>

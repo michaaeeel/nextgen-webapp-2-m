@@ -3,8 +3,11 @@ import React from "react";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  const { isAuthenticated } = useAuth();
+  
   // Investment features data
   const features = [
     {
@@ -96,9 +99,11 @@ const Index = () => {
               </p>
               
               <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <button className="h-14 px-8 bg-primary text-primary-foreground rounded-md font-medium shadow-sm transition-apple hover:shadow-md hover:bg-primary/90 active:scale-[0.98]">
-                  Get Started
-                </button>
+                {!isAuthenticated && (
+                  <button className="h-14 px-8 bg-primary text-primary-foreground rounded-md font-medium shadow-sm transition-apple hover:shadow-md hover:bg-primary/90 active:scale-[0.98]">
+                    Get Started
+                  </button>
+                )}
                 <button className="h-14 px-8 bg-secondary text-secondary-foreground rounded-md font-medium shadow-sm border border-border transition-apple hover:shadow-md hover:bg-secondary/90 active:scale-[0.98]">
                   Learn More
                 </button>

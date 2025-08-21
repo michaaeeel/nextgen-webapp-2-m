@@ -36,16 +36,17 @@ const ContentSection: React.FC<ContentSectionProps> = ({
       { threshold: 0.1 }
     );
 
-    if (sectionRef.current) {
-      const elements = sectionRef.current.querySelectorAll(".reveal-element");
+    const currentRef = sectionRef.current;
+    if (currentRef) {
+      const elements = currentRef.querySelectorAll(".reveal-element");
       elements.forEach((element) => {
         observer.observe(element);
       });
     }
 
     return () => {
-      if (sectionRef.current) {
-        const elements = sectionRef.current.querySelectorAll(".reveal-element");
+      if (currentRef) {
+        const elements = currentRef.querySelectorAll(".reveal-element");
         elements.forEach((element) => {
           observer.unobserve(element);
         });

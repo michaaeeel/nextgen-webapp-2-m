@@ -25,13 +25,14 @@ const Feature: React.FC<FeatureProps> = ({ title, description, icon, index }) =>
       { threshold: 0.2 }
     );
 
-    if (featureRef.current) {
-      observer.observe(featureRef.current);
+    const currentRef = featureRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
     }
 
     return () => {
-      if (featureRef.current) {
-        observer.unobserve(featureRef.current);
+      if (currentRef) {
+        observer.unobserve(currentRef);
       }
     };
   }, []);
@@ -86,16 +87,17 @@ const FeaturesSection: React.FC<FeaturesSectionProps> = ({
       { threshold: 0.1 }
     );
 
-    if (sectionRef.current) {
-      const headings = sectionRef.current.querySelectorAll(".section-heading");
+    const currentRef = sectionRef.current;
+    if (currentRef) {
+      const headings = currentRef.querySelectorAll(".section-heading");
       headings.forEach((heading) => {
         observer.observe(heading);
       });
     }
 
     return () => {
-      if (sectionRef.current) {
-        const headings = sectionRef.current.querySelectorAll(".section-heading");
+      if (currentRef) {
+        const headings = currentRef.querySelectorAll(".section-heading");
         headings.forEach((heading) => {
           observer.unobserve(heading);
         });
