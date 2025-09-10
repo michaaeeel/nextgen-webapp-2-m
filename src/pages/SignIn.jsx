@@ -8,14 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { resetPassword } from "@/lib/supabase";
+import { Eye, EyeOff } from "lucide-react";
 
 const SignIn = () => {
   const { login, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  const [isResettingPassword, setIsResettingPassword] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -59,35 +59,11 @@ const SignIn = () => {
     }
   };
 
-  const handlePasswordReset = async (e) => {
-    e.preventDefault();
-    
-    if (!formData.email) {
-      toast({
-        title: "Email Required",
-        description: "Please enter your email address to reset your password.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsResettingPassword(true);
-    
-    try {
-      await resetPassword(formData.email);
-      toast({
-        title: "Password Reset Email Sent",
-        description: "Check your email for password reset instructions.",
-      });
-    } catch (error) {
-      toast({
-        title: "Password Reset Failed",
-        description: error.message || "Failed to send password reset email.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsResettingPassword(false);
-    }
+  const handleForgotPassword = () => {
+    // Navigate to reset password page with current email
+    navigate('/reset-password', { 
+      state: { email: formData.email } 
+    });
   };
 
   return (
@@ -125,16 +101,30 @@ const SignIn = () => {
                 <Label htmlFor="password" className="text-sm font-medium mb-2">
                   Password
                 </Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="h-12 bg-secondary"
-                  placeholder="••••••••"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="h-12 bg-secondary pr-12"
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                    tabIndex={-1}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
               </div>
               
               <div className="flex items-center justify-between">
@@ -152,11 +142,10 @@ const SignIn = () => {
                 
                 <button
                   type="button"
-                  onClick={handlePasswordReset}
-                  disabled={isResettingPassword}
+                  onClick={handleForgotPassword}
                   className="text-sm text-primary hover:text-primary/80"
                 >
-                  {isResettingPassword ? "Sending..." : "Forgot password?"}
+                  Forgot password?
                 </button>
               </div>
               

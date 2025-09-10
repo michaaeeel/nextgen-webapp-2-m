@@ -9,6 +9,7 @@ import { RBACProvider } from './contexts/RBACContext';
 import Index from "./pages/Index";
 import SignIn from "./pages/SignIn";
 import SignUp from "./pages/SignUp";
+import ResetPassword from "./pages/ResetPassword";
 import About from "./pages/About";
 import NotFound from "./pages/NotFound";
 import CoursesAndPricing from "./pages/CoursesAndPricing";
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/about" element={<About />} />
             <Route path="/courses" element={<CoursesAndPricing />} />
             <Route path="/course-enrollment/:courseId" element={<CourseEnrollmentPage />} />

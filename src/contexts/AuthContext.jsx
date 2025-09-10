@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from "@/hooks/use-toast";
-import { supabase, signIn, signUp, signOut } from '@/lib/supabase';
+import { supabase, supabaseAdmin, signIn, signUp, signOut } from '@/lib/supabase';
 
 const AuthContext = createContext(null);
 
@@ -162,19 +162,45 @@ export function AuthProvider({ children }) {
         ...userData
       });
       
-      // Create profile in profiles table
+      // Create profile in profiles table using admin client to bypass RLS
       if (authUser) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authUser.id,
-            first_name: userData.firstName,
-            last_name: userData.lastName,
-            email: userData.email,
-            role: 'student', // Default role
-          });
+        try {
+          // First try with admin client
+          const { error: profileError } = await supabaseAdmin
+            .from('profiles')
+            .insert({
+              id: authUser.id,
+              first_name: userData.firstName,
+              last_name: userData.lastName,
+              email: userData.email,
+              role: 'student', // Default role
+            });
 
-        if (profileError) throw profileError;
+          if (profileError) {
+            console.error('Profile creation error with admin client:', profileError);
+            
+            // Fallback: try with regular client after setting the session
+            await supabase.auth.setSession(authUser.session);
+            
+            const { error: fallbackError } = await supabase
+              .from('profiles')
+              .insert({
+                id: authUser.id,
+                first_name: userData.firstName,
+                last_name: userData.lastName,
+                email: userData.email,
+                role: 'student', // Default role
+              });
+            
+            if (fallbackError) {
+              console.error('Profile creation error with fallback:', fallbackError);
+              throw new Error(`Failed to create profile: ${fallbackError.message}`);
+            }
+          }
+        } catch (insertError) {
+          console.error('Profile insertion failed:', insertError);
+          throw new Error(`Profile creation failed: ${insertError.message}`);
+        }
       }
 
       toast({
@@ -189,9 +215,10 @@ export function AuthProvider({ children }) {
       
       return authUser;
     } catch (error) {
+      console.error('Registration error:', error);
       toast({
         title: "Registration failed",
-        description: error.message,
+        description: error.message || "An error occurred during registration.",
         variant: "destructive"
       });
       throw error;

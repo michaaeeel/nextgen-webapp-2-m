@@ -310,25 +310,13 @@ const Header = () => {
               </RoleBasedElement>
             </>
           )}
-          {isAuthenticated ? (
-            <button
-              onClick={() => {
-                handleLogout();
-                setMobileMenuOpen(false);
-              }}
-              className="block py-2 text-lg font-medium text-white w-full text-left"
-            >
-              Sign Out
-            </button>
-          ) : (
-            <Link
-              to="/about"
-              className="block py-2 text-lg font-medium text-white"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              About
-            </Link>
-          )}
+          <Link
+            to="/about"
+            className="block py-2 text-lg font-medium text-white"
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            About
+          </Link>
         </div>
       </div>
     </header>
